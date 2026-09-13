@@ -62,14 +62,21 @@ test of the actual voice pipeline, not isolated unit tests.
 Deepgram STT WebSocket connection established against the live project. GuardedTTS's dev-mode
 silence path (no ElevenLabs calls made — confirmed by log absence and by the standalone tests).
 
-**Found, not fixed: no transcript ever appeared** after the Deepgram connection, across three runs
-and a 50-second window. Root cause suspected: the synthetic caller constructs `rtc.AudioFrame`
-directly from raw PCM bytes (`scripts/synthetic_caller.py`), and that byte-level construction is
-likely malformed or misaligned — a real browser's WebRTC mic capture doesn't go through this
-hand-rolled path and wouldn't have the same problem. Stopped debugging binary frame internals
-further per instruction to report rather than keep guessing. **Next step: test via `call.html` with
-an actual human + browser microphone**, which sidesteps the synthetic caller entirely, or fix the
-frame construction if another synthetic test is wanted first.
+**Found, not fixed: no transcript ever appeared** after the Deepgram connection, across multiple
+runs and two distinct hypotheses tried:
+1. AudioFrame byte layout — verified correct (nbytes=640 for 320 int16 samples, itemsize=2, format='h').
+2. Identity collision across repeated test runs (reusing the same `synthetic-caller` identity) —
+   retested with a unique UUID identity and a brand-new room name each run; same result.
+
+Diagnostic detail for whoever picks this up next: the RoomIO's audio input always attaches expecting
+`participant=null` (any mic source) and never logs re-binding to the real caller's identity; the gap
+between the caller finishing speech and session close is consistently ~20-30s, which may point to
+`AgentSession`'s `user_away_timeout` (default 15s) rather than genuine STT processing.
+
+**Stopped here** — two real debugging attempts without a fix is the point to report rather than keep
+guessing, per instruction. **Next step: test via `call.html` with an actual human + browser
+microphone**, which sidesteps the synthetic caller's hand-rolled audio-publishing path entirely and
+is the more likely path to actually work.
 
 ## Claims ledger
 
