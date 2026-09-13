@@ -1,6 +1,7 @@
-# Minimal deps for web_api/main.py's deployed service. /gate/demo only
-# imports agent.gate.verify + corpus.policy_records, which are pure
-# Python (no numpy/torch/moss needed). livekit (api only, not
+# Minimal deps for web_api/main.py's deployed service. /gate/demo
+# imports agent.gate.verify + corpus.policy_records (pure Python, no
+# numpy/torch needed); /gate/live-demo additionally needs the real moss
+# SDK. livekit (api only, not
 # livekit-agents/plugins) is needed for /token's issue_room_token --
 # lightweight, no torch pulled in. IMPORTANT: the top-level `livekit`
 # package does NOT include the `api` submodule -- that's the separate
@@ -11,5 +12,6 @@
 fastapi
 livekit
 livekit-api
+moss
 python-dotenv
 uvicorn[standard]

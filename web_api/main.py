@@ -68,6 +68,49 @@ def get_token(room: str = "hesitate-demo"):
     }
 
 
+@app.get("/gate/live-demo")
+def gate_live_demo():
+    """Same scenario as /gate/demo, but using the REAL live Moss service
+    for retrieval instead of the fixture RECORDS list directly -- this is
+    what satisfies 'required sponsor integration actually runs in the
+    deployed workflow' rather than only in local tests. Requires
+    MOSS_PROJECT_ID/MOSS_PROJECT_KEY set on the deployed service."""
+    try:
+        from agent.retrieval.live_moss import LiveMossClient
+        from agent.retrieval.adapter import retrieve_candidate_records
+        from agent.gate.extract import extract_claims
+        from agent.gate.resolve import resolve_claim
+        from agent.gate.correct import build_sentence_correction
+        from agent.gate.schema import AtomicVerdict
+        from corpus.policy_records import RECORDS
+    except Exception as e:
+        raise HTTPException(status_code=503, detail=f"live Moss demo unavailable: {e}")
+
+    sentence = "You'll need to fast for twelve hours before the test."
+    try:
+        client = LiveMossClient()
+        client.load_index("hesitate-test")
+        candidates = retrieve_candidate_records(client, "hesitate-test", "how long do I need to fast?", RECORDS, top_k=5)
+    except Exception as e:
+        raise HTTPException(status_code=503, detail=f"live Moss query failed: {e}")
+
+    claims = extract_claims(sentence)
+    if not claims:
+        return {"input_sentence": sentence, "error": "no claim extracted"}
+    decision, evidence_ids, reason, record = resolve_claim(claims[0], candidates)
+    verdict = AtomicVerdict(claims[0], decision, evidence_ids, reason, resolved_record=record)
+    replacement = build_sentence_correction((verdict,)) if decision.value == "contradicted" else sentence
+
+    return {
+        "input_sentence": sentence,
+        "moss_index": "hesitate-test",
+        "moss_candidates_retrieved": sorted(set(c.source_id for c in candidates)),  # dedup: one source doc can back multiple curated records
+        "decision": decision.value,
+        "spoken_output": replacement,
+        "note": "This query hit the real Moss service, not a local fixture.",
+    }
+
+
 _static_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static")
 if os.path.isdir(_static_dir):
     app.mount("/static", StaticFiles(directory=_static_dir), name="static")
