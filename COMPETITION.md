@@ -16,6 +16,22 @@ Use the more explicit 23:59 deadline in the rules rather than relying on the ove
 
 ## Cost and integration evidence
 
+**Live accounts confirmed working (Sep 2026), all keys stored in .env, never committed:**
+- Moss: project connected, live retrieval confirmed (see Claims ledger).
+- LiveKit: project connected, token issuance + authenticated API call confirmed live.
+- Deepgram (STT): key verified (HTTP 200 on /v1/projects).
+- ElevenLabs (TTS): key verified (HTTP 200 on /v1/user). **Free tier: 10,000 characters/month.**
+  At roughly 150 words/minute spoken and ~5-6 characters/word, that's ~15-20 minutes of TTS audio
+  TOTAL for the entire remaining build — dev testing, rehearsal, AND the judged demo combined.
+  This WILL run out before Sep 26 if not budgeted. Action needed from Ashraf: either upgrade the
+  ElevenLabs plan before heavy voice-loop testing starts, or move dev/rehearsal TTS onto a
+  free/local alternative and reserve the ElevenLabs quota for the final recorded demo + live
+  finale only. Not yet decided — flagging now, before the budget is silently spent on iteration.
+- LLM provider (OpenAI/Anthropic/etc.) for agent reply generation: **not yet provided**, blocks
+  building the actual conversational loop (STT text can be fed to the gate for testing without it,
+  but nothing generates the agent's spoken replies yet).
+
+
 The [Moss pricing page](https://docs.moss.dev/docs/pricing), checked September 12, lists Developer allowance: $5 monthly credits, 500 MB storage, 50 MB monthly ingest, 10 GB monthly egress, 60 voice-minutes monthly, one project, three indexes, and unmetered local queries. Confirm account-specific balances and what voice-minute metering covers before projecting capacity. This does not include LiveKit, STT, LLM, TTS, or hosting allowances. No actual account/quota inspection or spending occurred.
 
 The [Moss LiveKit guide](https://docs.moss.dev/docs/integrations/livekit) documents Python loading/querying and advises SDK 1.9.0+. The [LiveKit node documentation](https://docs.livekit.io/agents/logic/nodes/) documents text processing at `tts_node`. These support a feasibility spike, not a claim that our interception, deployment, or latency already works. The original live-call-context Markdown link failed retrieval during this review; the [Moss documentation index](https://docs.moss.dev/llms.txt) still lists it. Do not treat a fetch error as proof the capability is absent.
