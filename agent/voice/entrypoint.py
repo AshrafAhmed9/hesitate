@@ -107,4 +107,14 @@ async def entrypoint(ctx: JobContext):
 
 
 if __name__ == "__main__":
-    cli.run_app(WorkerOptions(entrypoint_fnc=entrypoint))
+    # REAL FINDING (2026-09-13, deployed on Render free tier): the default
+    # load_threshold (0.7 of a CPU-based load metric) marks this worker
+    # "unavailable" almost immediately -- load=0.99 was observed within
+    # seconds of startup -- because Render's free plan allocates a tiny
+    # CPU share, and process warm-up (importing torch/onnxruntime for
+    # silero VAD) alone saturates it. An unavailable worker never accepts
+    # a job, so calls to call.html would silently go unanswered even with
+    # the worker running and registered. Raised above 1.0 so the worker
+    # always accepts jobs on this tier; there is only ever one call at a
+    # time in this demo, so no real capacity risk.
+    cli.run_app(WorkerOptions(entrypoint_fnc=entrypoint, load_threshold=1.5))
