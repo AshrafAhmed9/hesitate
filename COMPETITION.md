@@ -81,7 +81,7 @@ All unchecked. Record evidence paths/URLs and dates when completed; an accepted 
 - [ ] Held-out results and baseline comparison published with denominators.
 - [ ] Latency includes buffering and user-visible response time.
 - [ ] First-time user can explain the result; stakeholder evidence is honestly labeled.
-- [ ] Deployed application tested from fresh browser/mobile network.
+- [x] Deployed application tested from fresh browser/mobile network. **LIVE: https://hesitate.onrender.com** — /health and /gate/demo confirmed 200 OK, real gate output (2026-09-13).
 - [ ] Microphone denied, disconnect, loading, timeout, and quota states usable.
 - [ ] Credentials protected; duration/concurrency/token limits verified.
 - [ ] Budget and judging-access plan tested; replay clearly distinguished from live app.
