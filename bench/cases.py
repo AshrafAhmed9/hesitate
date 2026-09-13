@@ -92,4 +92,11 @@ CASES = [
     ("The cost is $150.50.", RECORDS, Decision.CONTRADICTED, "corrected"),
     # Decimal cost, exact match at cent precision.
     ("The cost is $150.00.", RECORDS, Decision.SUPPORTED, "released"),
+
+    # Completeness check (agent/gate/completeness.py): a vague range like
+    # "8-12 hours" is not a typed claim, but it IS clearly factual content
+    # about fasting duration -- must be flagged unclassified and declined,
+    # not silently defaulted to SUPPORTED. Found live 2026-09-13 via a real
+    # Groq LLM reply, fixed the same day.
+    ("Fast for 8-12 hours before your appointment.", RECORDS, Decision.UNVERIFIABLE, "declined"),
 ]

@@ -24,6 +24,7 @@ import uuid
 from datetime import datetime
 from typing import Optional
 
+from .completeness import find_unclassified_spans
 from .correct import DECLINE_TEXT, build_sentence_correction
 from .extract import extract_claims
 from .resolve import resolve_claim
@@ -45,6 +46,7 @@ def verify_unit(
 ) -> GateDecision:
     t0 = time.perf_counter()
     claims = extract_claims(candidate.text)
+    unclassified = find_unclassified_spans(candidate.text, [c.raw_text for c in claims])
     t1 = time.perf_counter()
 
     verdicts: list[AtomicVerdict] = []
@@ -61,7 +63,7 @@ def verify_unit(
         replacement_text_hash=None,
         policy_snapshot_id=candidate.policy_snapshot_id,
         atomic_verdicts=tuple(verdicts),
-        unclassified_spans=(),  # no completeness check yet -- see extract.py status note
+        unclassified_spans=unclassified,  # agent/gate/completeness.py -- narrow heuristic, see its docstring
         stage_timings_ms={
             "extraction_ms": (t1 - t0) * 1000,
             "resolution_ms": (t2 - t1) * 1000,

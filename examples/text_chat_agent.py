@@ -41,15 +41,14 @@ def ask(user_text: str) -> str:
     """One turn: generate a reply, verify it through the same gate the
     voice agent uses, return the text that would actually be shown/spoken.
 
-    KNOWN LIMITATION observed live, corrected after re-checking (the
-    original note here was wrong): when the LLM answers with a range
-    ("8-12 hours"), extract.py's number pattern does NOT match "8-12" at
-    all -- verified directly: extract_claims() returns an empty list for
-    that exact sentence, not a truncated "8". This is the SAME
-    already-documented gap as the text-message-confirmation case in
-    bench/cases.py (no typed claim extracted -> defaults to SUPPORTED),
-    not a distinct range-truncation bug. No new gap here; noted so the
-    same documented limitation isn't rediscovered as if it were new."""
+    FIXED 2026-09-13: an earlier version of this docstring incorrectly
+    described a "range truncates to first number" bug. Re-checking showed
+    the real issue was simpler: a range like "8-12 hours" produced zero
+    typed claims at all, silently defaulting to SUPPORTED. This is now
+    caught by agent/gate/completeness.py's unclassified-span check, which
+    flags number+unit content no typed pattern consumed and declines the
+    sentence instead of releasing it unverified. See bench/cases.py for
+    the regression test."""
     reply = generate_reply(SYSTEM_PROMPT, user_text)
     result = verify_sentence(reply["text"], RECORDS)
     if result.disposition == "released":
