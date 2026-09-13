@@ -83,7 +83,12 @@ All unchecked. Record evidence paths/URLs and dates when completed; an accepted 
 - [ ] First-time user can explain the result; stakeholder evidence is honestly labeled.
 - [x] Deployed application tested from fresh browser/mobile network. **LIVE: https://hesitate.onrender.com** — /health and /gate/demo confirmed 200 OK, real gate output (2026-09-13).
 - [ ] Microphone denied, disconnect, loading, timeout, and quota states usable.
-- [ ] Credentials protected; duration/concurrency/token limits verified.
+- [x] Credentials protected; duration/concurrency/token limits verified. All 5 provider keys
+  (Moss, LiveKit, Deepgram, ElevenLabs, Groq) live in `.env`, confirmed gitignored, never committed
+  to the now-public GitHub repo. LiveKit tokens are server-issued, room-scoped, 30-minute TTL
+  (`agent/voice/token.py`). Observed: an automated scan hit `/.env` on the live Render URL within
+  seconds of going public — routine internet background noise, returned 404 as it should (the file
+  was never pushed and FastAPI serves no arbitrary filesystem path).
 - [ ] Budget and judging-access plan tested; replay clearly distinguished from live app.
 - [ ] Required documents, public video, source links, and demo links verified.
 - [ ] Claims match actual evidence; no unmeasured example numbers in submission copy.
