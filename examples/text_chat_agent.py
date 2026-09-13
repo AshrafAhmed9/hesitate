@@ -41,12 +41,15 @@ def ask(user_text: str) -> str:
     """One turn: generate a reply, verify it through the same gate the
     voice agent uses, return the text that would actually be shown/spoken.
 
-    KNOWN LIMITATION observed live: when the LLM answers with a range
-    ("8-12 hours") rather than a single value, extract.py's regex grabs
-    only the first number, which can coincidentally match the current
-    record (8) even though the full range is imprecise. This is a real
-    gap in the typed extractor's range handling, not specific to this
-    example -- the same regex is used by the voice agent."""
+    KNOWN LIMITATION observed live, corrected after re-checking (the
+    original note here was wrong): when the LLM answers with a range
+    ("8-12 hours"), extract.py's number pattern does NOT match "8-12" at
+    all -- verified directly: extract_claims() returns an empty list for
+    that exact sentence, not a truncated "8". This is the SAME
+    already-documented gap as the text-message-confirmation case in
+    bench/cases.py (no typed claim extracted -> defaults to SUPPORTED),
+    not a distinct range-truncation bug. No new gap here; noted so the
+    same documented limitation isn't rediscovered as if it were new."""
     reply = generate_reply(SYSTEM_PROMPT, user_text)
     result = verify_sentence(reply["text"], RECORDS)
     if result.disposition == "released":
