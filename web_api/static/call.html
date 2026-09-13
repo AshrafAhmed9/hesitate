@@ -1,78 +1,322 @@
 <!doctype html>
-<html>
+<html lang="en">
 <head>
 <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Hesitate — call the clinic agent</title>
 <script src="https://cdn.jsdelivr.net/npm/livekit-client@2/dist/livekit-client.umd.min.js"></script>
 <style>
-  body { font-family: system-ui, sans-serif; max-width: 480px; margin: 60px auto; padding: 0 20px; }
-  button { font-size: 16px; padding: 12px 24px; border-radius: 8px; border: none; cursor: pointer; }
-  #connect { background: #16a34a; color: white; }
-  #hangup { background: #dc2626; color: white; }
-  #status { margin-top: 16px; color: #555; }
-  #log { margin-top: 16px; font-size: 13px; color: #888; white-space: pre-wrap; }
+  :root {
+    --bg: #f7f7f5;
+    --surface: #ffffff;
+    --border: #e5e5e0;
+    --text: #1a1a17;
+    --text-dim: #6b6b64;
+    --accent: #1a6b4f;
+    --accent-hover: #14523d;
+    --danger: #b3261e;
+    --danger-bg: #fdecea;
+    --focus: #1a6b4f;
+    --radius: 12px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #17171a;
+      --surface: #212124;
+      --border: #33333a;
+      --text: #f0f0ec;
+      --text-dim: #9a9a94;
+      --accent: #4ecb95;
+      --accent-hover: #6fe0ac;
+      --danger: #ff8a80;
+      --danger-bg: #3a1f1d;
+      --focus: #4ecb95;
+    }
+  }
+  * { box-sizing: border-box; }
+  html { touch-action: manipulation; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+    display: flex;
+    justify-content: center;
+    padding: 24px 16px 48px;
+  }
+  main {
+    width: 100%;
+    max-width: 480px;
+  }
+  h1 {
+    font-size: 1.375rem;
+    font-weight: 650;
+    margin: 0 0 4px;
+    letter-spacing: -0.01em;
+  }
+  .subtitle {
+    color: var(--text-dim);
+    font-size: 0.9rem;
+    margin: 0 0 24px;
+    line-height: 1.5;
+  }
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+  }
+  .status-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 20px;
+    min-height: 24px;
+  }
+  .status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--text-dim);
+    flex-shrink: 0;
+    transition: background-color 200ms ease;
+  }
+  .status-dot[data-state="connecting"] { background: #d9a441; animation: pulse 1.2s ease-in-out infinite; }
+  .status-dot[data-state="connected"] { background: var(--accent); }
+  .status-dot[data-state="error"] { background: var(--danger); }
+  @media (prefers-reduced-motion: reduce) {
+    .status-dot[data-state="connecting"] { animation: none; }
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+  #status-text {
+    font-size: 0.9rem;
+    color: var(--text-dim);
+  }
+  .button-row {
+    display: flex;
+    gap: 12px;
+  }
+  button {
+    font: inherit;
+    font-weight: 600;
+    font-size: 0.95rem;
+    padding: 12px 20px;
+    border-radius: 10px;
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: background-color 150ms ease, opacity 150ms ease;
+    touch-action: manipulation;
+    flex: 1;
+  }
+  button:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+  button:focus-visible {
+    outline: 2px solid var(--focus);
+    outline-offset: 2px;
+  }
+  #connect {
+    background: var(--accent);
+    color: white;
+  }
+  #connect:not(:disabled):hover { background: var(--accent-hover); }
+  #hangup {
+    background: transparent;
+    color: var(--danger);
+    border-color: var(--border);
+  }
+  #hangup:not(:disabled):hover { background: var(--danger-bg); }
+  .error-box {
+    display: none;
+    margin-top: 16px;
+    padding: 12px 14px;
+    background: var(--danger-bg);
+    border: 1px solid var(--danger);
+    border-radius: 8px;
+    font-size: 0.85rem;
+    color: var(--danger);
+    line-height: 1.5;
+  }
+  .error-box[data-visible="true"] { display: block; }
+  .log-toggle {
+    margin-top: 20px;
+    background: none;
+    border: none;
+    padding: 0;
+    font-size: 0.8rem;
+    color: var(--text-dim);
+    text-decoration: underline;
+    flex: none;
+    width: auto;
+  }
+  #log {
+    display: none;
+    margin-top: 10px;
+    padding: 12px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 0.75rem;
+    color: var(--text-dim);
+    white-space: pre-wrap;
+    max-height: 200px;
+    overflow-y: auto;
+  }
+  #log[data-visible="true"] { display: block; }
+  .note {
+    margin-top: 20px;
+    font-size: 0.8rem;
+    color: var(--text-dim);
+    line-height: 1.5;
+  }
+  audio { display: none; }
 </style>
 </head>
 <body>
-  <h2>Hesitate — Clinic Voice Agent (test call)</h2>
-  <p>This connects your microphone to the real deployed voice agent over LiveKit.
-     Real STT, real LLM, real verification gate. Not yet connected to a running
-     agent worker — the worker itself needs to be running separately (see repo).</p>
-  <button id="connect">Start call</button>
-  <button id="hangup" disabled>Hang up</button>
-  <div id="status">Not connected.</div>
-  <div id="log"></div>
+<main>
+  <h1>Hesitate</h1>
+  <p class="subtitle">Test call with the clinic voice agent. Every factual claim it makes is checked
+    against policy before you hear it.</p>
+
+  <div class="card">
+    <div class="status-row" aria-live="polite">
+      <span class="status-dot" id="status-dot" data-state="idle" aria-hidden="true"></span>
+      <span id="status-text">Not connected.</span>
+    </div>
+
+    <div class="button-row">
+      <button id="connect" type="button">Start call</button>
+      <button id="hangup" type="button" disabled>Hang up</button>
+    </div>
+
+    <div class="error-box" id="error-box" role="alert"></div>
+
+    <button class="log-toggle" id="log-toggle" type="button" aria-expanded="false" aria-controls="log">
+      Show technical log
+    </button>
+    <div id="log" aria-live="polite"></div>
+  </div>
+
+  <p class="note">
+    Uses your microphone over a real LiveKit connection. No audio is stored by this page.
+  </p>
+</main>
 
 <script>
-const statusEl = document.getElementById('status');
-const logEl = document.getElementById('log');
-let room = null;
+(() => {
+  const statusDot = document.getElementById('status-dot');
+  const statusText = document.getElementById('status-text');
+  const connectBtn = document.getElementById('connect');
+  const hangupBtn = document.getElementById('hangup');
+  const errorBox = document.getElementById('error-box');
+  const logEl = document.getElementById('log');
+  const logToggle = document.getElementById('log-toggle');
+  let room = null;
+  let logVisible = false;
 
-function log(msg) {
-  logEl.textContent += msg + "\n";
-}
-
-document.getElementById('connect').onclick = async () => {
-  statusEl.textContent = "Fetching token...";
-  const resp = await fetch('/token');
-  if (!resp.ok) {
-    statusEl.textContent = "Failed to get token: " + resp.status;
-    return;
+  function setState(state, text) {
+    statusDot.dataset.state = state;
+    statusText.textContent = text;
   }
-  const { token, url, room: roomName } = await resp.json();
-  log("Got token for room: " + roomName);
 
-  room = new LivekitClient.Room();
-  room.on(LivekitClient.RoomEvent.TrackSubscribed, (track) => {
-    if (track.kind === 'audio') {
-      const el = track.attach();
-      document.body.appendChild(el);
-      log("Subscribed to agent audio track.");
+  function log(msg) {
+    logEl.textContent += msg + "\n";
+    logEl.scrollTop = logEl.scrollHeight;
+  }
+
+  function showError(message) {
+    errorBox.textContent = message;
+    errorBox.dataset.visible = "true";
+  }
+
+  function clearError() {
+    errorBox.dataset.visible = "false";
+    errorBox.textContent = "";
+  }
+
+  logToggle.addEventListener('click', () => {
+    logVisible = !logVisible;
+    logEl.dataset.visible = String(logVisible);
+    logToggle.setAttribute('aria-expanded', String(logVisible));
+    logToggle.textContent = logVisible ? 'Hide technical log' : 'Show technical log';
+  });
+
+  connectBtn.addEventListener('click', async () => {
+    clearError();
+    connectBtn.disabled = true;
+    setState('connecting', 'Connecting…');
+
+    let tokenData;
+    try {
+      const resp = await fetch('/token');
+      if (!resp.ok) throw new Error(`Server returned ${resp.status}`);
+      tokenData = await resp.json();
+    } catch (e) {
+      setState('error', 'Could not reach the server.');
+      showError(`Failed to get a call token (${e.message}). Check your connection and try again.`);
+      connectBtn.disabled = false;
+      return;
+    }
+
+    const { token, url, room: roomName } = tokenData;
+    log(`Got token for room: ${roomName}`);
+
+    room = new LivekitClient.Room();
+
+    room.on(LivekitClient.RoomEvent.TrackSubscribed, (track) => {
+      if (track.kind === 'audio') {
+        const el = track.attach();
+        document.body.appendChild(el);
+        log('Subscribed to agent audio track.');
+      }
+    });
+
+    room.on(LivekitClient.RoomEvent.ParticipantConnected, (p) => {
+      log(`Agent joined: ${p.identity}`);
+      setState('connected', 'Connected — agent is on the line.');
+    });
+
+    room.on(LivekitClient.RoomEvent.Disconnected, (reason) => {
+      setState('idle', 'Call ended.');
+      connectBtn.disabled = false;
+      hangupBtn.disabled = true;
+      log(`Disconnected (${reason ?? 'unknown reason'}).`);
+    });
+
+    try {
+      await room.connect(url, token);
+      log(`Connected to room ${roomName}.`);
+      setState('connected', 'Connected — waiting for the agent to join…');
+
+      try {
+        await room.localParticipant.setMicrophoneEnabled(true);
+        log('Microphone enabled.');
+      } catch (micErr) {
+        setState('error', 'Microphone access denied.');
+        showError('This page needs microphone access to place a call. Allow it in your browser’s site settings, then try again.');
+        connectBtn.disabled = false;
+        return;
+      }
+
+      hangupBtn.disabled = false;
+    } catch (e) {
+      setState('error', 'Could not connect to the call.');
+      showError(`Connection failed (${e.message}). This usually means no agent worker is currently running to answer the call — try again shortly.`);
+      connectBtn.disabled = false;
+      log(`Error: ${e.message}`);
     }
   });
-  room.on(LivekitClient.RoomEvent.Disconnected, () => {
-    statusEl.textContent = "Disconnected.";
-    document.getElementById('connect').disabled = false;
-    document.getElementById('hangup').disabled = true;
+
+  hangupBtn.addEventListener('click', () => {
+    if (room) room.disconnect();
   });
-
-  try {
-    await room.connect(url, token);
-    statusEl.textContent = "Connected to room: " + roomName;
-    log("Connected. Enabling microphone...");
-    await room.localParticipant.setMicrophoneEnabled(true);
-    log("Microphone enabled. Waiting for agent to join...");
-    document.getElementById('connect').disabled = true;
-    document.getElementById('hangup').disabled = false;
-  } catch (e) {
-    statusEl.textContent = "Connection failed: " + e.message;
-    log("Error: " + e.message);
-  }
-};
-
-document.getElementById('hangup').onclick = () => {
-  if (room) room.disconnect();
-};
+})();
 </script>
 </body>
 </html>
