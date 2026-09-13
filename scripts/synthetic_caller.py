@@ -46,12 +46,17 @@ def synthesize_locally(text: str) -> bytes:
 
 
 async def speak_into_room(text: str, room_name: str = ROOM_NAME) -> None:
+    import uuid
     from agent.voice.token import issue_room_token
 
-    token = issue_room_token(room_name, identity="synthetic-caller")
+    # Unique identity per run: a hardcoded identity risks colliding with a
+    # not-yet-fully-cleaned-up connection from a previous test run, which
+    # is a plausible contributor to the observed transcript gap.
+    identity = f"synthetic-caller-{uuid.uuid4().hex[:8]}"
+    token = issue_room_token(room_name, identity=identity)
     room = rtc.Room()
     await room.connect(os.environ["LIVEKIT_URL"], token)
-    print(f"Connected to room {room_name!r} as synthetic-caller.")
+    print(f"Connected to room {room_name!r} as {identity!r}.")
 
     source = rtc.AudioSource(SAMPLE_RATE, NUM_CHANNELS)
     track = rtc.LocalAudioTrack.create_audio_track("synthetic-caller-mic", source)

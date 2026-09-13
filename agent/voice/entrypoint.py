@@ -26,10 +26,26 @@ pipeline handles framing correctly. This needs either fixing the raw
 frame construction or testing via an actual browser (call.html) instead.
 Not silently claimed as working; not spent further time guessing at
 binary frame internals per instruction to stop and report when stuck.
-One thing ruled out: AudioFrame byte layout itself is correct (verified
-nbytes=640 for 320 int16 samples, itemsize=2, format='h') -- the bug is
-elsewhere, likely in capture_frame() timing/pacing or how the published
-track is actually being consumed server-side, not in frame construction.
+Two hypotheses tried and ruled out (2026-09-13):
+1. AudioFrame byte layout -- verified correct (nbytes=640 for 320 int16
+   samples, itemsize=2, format='h').
+2. Identity collision across repeated test runs (reusing the same
+   'synthetic-caller' identity) -- retested with a unique UUID identity
+   and a brand-new room name each run; same result.
+
+Additional diagnostic detail: the RoomIO's 'input stream attached' debug
+log always shows participant=null (a placeholder awaiting any
+SOURCE_MICROPHONE), and no corresponding log line ever shows it
+re-binding to the actual synthetic caller's participant name -- only the
+'detached' event references the real identity, at session-close time.
+The gap between the caller finishing speech and the session closing is
+consistently ~20-30 seconds, longer than the actual test duration,
+which may point to AgentSession's user_away_timeout (default 15s)
+rather than genuine audio processing. Not chased further -- two real
+debugging attempts is the stopping point per instruction to report
+rather than keep guessing. Next owner should test via a real browser
+microphone (call.html) first, since that sidesteps whether the
+synthetic caller's publish path is the actual problem.
 
 Run with: python -m agent.voice.entrypoint dev   (LiveKit's own dev-mode CLI)
 """
