@@ -1,0 +1,130 @@
+# Competition tracker
+
+Updated September 13, 2026; event sources rechecked September 13; SDK/pricing evidence retains its stated check date. All implementation and submission checks remain pending. Initial workspace contained only `PLAN.md`, with no source code or Git metadata. This tracker records evidence, not completed work by implication.
+
+## Confirmed competition
+
+Ashraf explicitly confirmed YC Fall 2026 × Moss. The prior attachment mismatch is resolved and is retained only in historical review notes. This is a Moss-only, planning-only task.
+
+Required event alignment is consolidated in PLAN.md Section 23, based on the [official overview](https://yc-fall-2026-x-moss.devpost.com/), [rules](https://yc-fall-2026-x-moss.devpost.com/rules), and [resources](https://yc-fall-2026-x-moss.devpost.com/resources). All runtime, registration, contributor, and submission checks remain pending unless marked otherwise.
+
+## Moss administration
+
+The [official rules](https://yc-fall-2026-x-moss.devpost.com/rules) confirm weights 35/30/20/15 for product/technical/speed/demo; September 23 finalist announcement; September 26 Bengaluru finale. They describe cash across five teams and separate social/referral reward pools. These are pools, not individual award amounts. Attendance, eligibility, registration, and optional-pool participation are unverified for Ashraf.
+
+Use the more explicit 23:59 deadline in the rules rather than relying on the overview's midnight display. The earlier solo-build freeze dates are superseded by the full-depth dependency gates in PLAN.md. Preserve the official deadline; set the release-candidate/rehearsal schedule from actual staffing and progress without automatically deleting scope. The official resources identify the HiDevs event URL in PLAN.md Section 23. Its authenticated form was not inspected; verify its fields and any supplementary Devpost instructions before submission. Optional social/referral activity must not displace the main submission. Drafting public material is allowed; publishing or messaging is not authorized by this review request.
+
+## Cost and integration evidence
+
+The [Moss pricing page](https://docs.moss.dev/docs/pricing), checked September 12, lists Developer allowance: $5 monthly credits, 500 MB storage, 50 MB monthly ingest, 10 GB monthly egress, 60 voice-minutes monthly, one project, three indexes, and unmetered local queries. Confirm account-specific balances and what voice-minute metering covers before projecting capacity. This does not include LiveKit, STT, LLM, TTS, or hosting allowances. No actual account/quota inspection or spending occurred.
+
+The [Moss LiveKit guide](https://docs.moss.dev/docs/integrations/livekit) documents Python loading/querying and advises SDK 1.9.0+. The [LiveKit node documentation](https://docs.livekit.io/agents/logic/nodes/) documents text processing at `tts_node`. These support a feasibility spike, not a claim that our interception, deployment, or latency already works. The original live-call-context Markdown link failed retrieval during this review; the [Moss documentation index](https://docs.moss.dev/llms.txt) still lists it. Do not treat a fetch error as proof the capability is absent.
+
+Planned budget worksheet: total developer rehearsals + judge sessions × session duration; cost/minute for each provider; startup/hosting costs; available credit; enforced concurrency/duration; fallback behavior. Values pending a real account and deployment check. Budget active/staged/retained policy snapshots and separate session indexes explicitly. Verify quota behavior before claiming the full update/rollback/session workflow fits the account. Persist only consented/redacted records required by the operational workflow.
+
+## Claims ledger
+
+| Intended claim | Required evidence | Current status |
+|---|---|---|
+| Candidate cannot bypass speech boundary | TTS input tests and end-to-end audio trace including correction and cancellation | Not implemented |
+| Handles the declared administrative policy forms | Locked held-out outcomes, coverage and failure counts | Not measured |
+| Resolves current/stale/conflicting policy correctly | Applicability, supersession, full-key conflict tests | Not implemented |
+| Moss contributes useful retrieval | Runtime trace and fair local baseline | Not measured |
+| Remains usable | Correct completion/refusal metrics and observed user test | Not measured |
+| Adds acceptable response delay | Paired full-turn timing including buffering | Not measured |
+| Has plausible customer value | Anonymized stakeholder observation; proxy clearly separated | Not validated |
+
+No 31 ms, 188/200, universal safety, exclusive feasibility, customer outcome, or placement probability is a measured fact. Raw benchmark artifacts and hashes belong in `bench/` only when generated.
+
+## Submission checklist
+
+All unchecked. Record evidence paths/URLs and dates when completed; an accepted risk does not waive mandatory rules.
+
+- [x] Event target explicitly resolved and recorded: Moss, confirmed by Ashraf.
+- [ ] Eligibility, registration, submission route, and deadline verified.
+- [ ] Required sponsor integration actually runs in the deployed workflow.
+- [ ] Source/setup reproducible from a clean environment.
+- [ ] Policy fixtures labeled synthetic with provenance/license status.
+- [ ] Full speech-boundary, authority, failure, and cancellation checks pass.
+- [ ] Held-out results and baseline comparison published with denominators.
+- [ ] Latency includes buffering and user-visible response time.
+- [ ] First-time user can explain the result; stakeholder evidence is honestly labeled.
+- [ ] Deployed application tested from fresh browser/mobile network.
+- [ ] Microphone denied, disconnect, loading, timeout, and quota states usable.
+- [ ] Credentials protected; duration/concurrency/token limits verified.
+- [ ] Budget and judging-access plan tested; replay clearly distinguished from live app.
+- [ ] Required documents, public video, source links, and demo links verified.
+- [ ] Claims match actual evidence; no unmeasured example numbers in submission copy.
+- [ ] Final adversarial review of the implementation, not merely this plan.
+- [ ] Submission completed on the correct platform(s), receipt retained.
+- [ ] If Moss shortlisted, pitch and offline recording rehearsed; permitted changes verified.
+
+## Current verdict
+
+**ALIGNED at the plan level with published Moss requirements. CONCERNS for first-place readiness:** customer need and advantage over a template FAQ remain hypotheses. Plan-level correctness issues were amended; implementation evidence is wholly outstanding. The full-depth scope is specified in PLAN.md. When building is separately authorized, implement the vertical slice as the foundation for all work packages, not as a substitute for the complete submission.
+
+## Full-depth mandate and completion ledger — September 13
+
+Ashraf has help and explicitly rejects scope reduction based on assumed solo-build time. All PLAN.md Sections 9–22 are intended deliverables. No automatic one-site/one-attribute fallback, NLI cut, second-domain cut, or reduced benchmark is authorized by the earlier review. Official deadlines and contributor rules still apply; helper identities, roles, and availability remain to be recorded.
+
+| Package | Required completion evidence | Status |
+|---|---|---|
+| W0 Contracts | Versioned schemas, shared fixtures, resolved sponsor control path | Pending |
+| W1 Domain/product | All original claim families, source records, interviews and tasks | Pending |
+| W2 Policy lifecycle | Import/review, publish, conflict, rollback, revocation race tests | Pending |
+| W3 Verification | Typed + semantic metrics, decomposition failures, checked corrections | Pending |
+| W4 Voice | Actual TTS/played-audio traces, interruption and ordering tests | Pending |
+| W5 Staff workflow | Persisted isolated cases, permissions, assignment/resolution/update loop | Pending |
+| W6 Evidence | 2,000 primary cases, 200 task scenarios, fair six-backend comparison and ablations | Pending |
+| W7 Portability | Second-agent example, 400-case second-domain pack, adaptation log | Pending |
+| W8 Operations | Concurrent deployment, resource bounds, restore, privacy and failure tests | Pending |
+| W9 Presentation | User observations, short/full demonstrations, artifact links, final implementation review | Pending |
+
+Counts are planned targets, never completed results. A package is complete only when its proof exists and passes. The full-depth design has received local consistency review; the attempted final independent review of the expanded file could not run because the review agents hit a usage limit. Their earlier technical/product recommendations informed the expansion, but their earlier CLEAN verdict applies only to the earlier smaller plan.
+
+## Competitive-strengthening amendment — planning only
+
+The user explicitly requested plan changes only, with no building. No application work or external action is authorized by this amendment. PLAN.md Sections 19–22 add the following mandatory evidence protocols; all remain pending.
+
+| Requirement | Owner package | Current evidence |
+|---|---|---|
+| Strong approved-answer and existing-guardrail baselines with equal source metadata | W6 | Protocol planned; no run |
+| Preregistered primary outcome, workload strata, target margins, uncertainty and exclusion rules | W6 | Specification only |
+| Firsthand problem observations and observed before/after product change | W1/W9 | No participants or findings |
+| Independent developer integration exercise | W7/W9 | No attempt performed |
+| Judge-objection evidence index linking each claim to proof | W9 | Matrix planned; artifacts pending |
+| Independent comparison using official rubric and strongest baseline | W9 | Not performed |
+| Separate technical, competitive-value, and event-fit verdicts | Integration lead | Technical implementation absent; advantage unmeasured; Moss confirmed; administrative checks pending |
+
+Planned decision thresholds must be finalized before locked evaluation; they are not observed performance. Failure does not authorize scope cuts or weaker baselines. Diagnose and improve the relevant workflow, then evaluate on fresh evidence. A persistent lack of comparative value remains a concern rather than being declared solved in prose.
+
+## Moss-specific alignment verification
+
+- Confirmed fit: real-time voice plus agent reliability/evaluation.
+- Explicit default: Moss in deployed retrieval; alternative databases are benchmark configurations.
+- All five mandatory artifact contracts and owners are in PLAN.md Section 23.
+- Three-minute video length is our editorial target, not a verified Moss rule.
+- Registration/form access and actual contributor eligibility remain pending; published team maximum is two.
+- The complete plan preserves full scope. No building, registration, calls, or publication occurred.
+
+## Published-rule coverage and remaining checks
+
+This matrix separates planned coverage from actual compliance. Sources: official Moss overview/rules/resources linked above. No claim that every eligibility condition or authenticated form field has been satisfied.
+
+| Rule/requirement | Plan coverage | Actual compliance status |
+|---|---|---|
+| Age of majority / eligible location | Verify participant eligibility before entry | Not verified |
+| Solo or team of at most two | Work-package roles do not imply extra entrants; contributor review required | Actual helper arrangement not verified |
+| Participant/team's own work | Record authorship, contributor roles, source/model licenses and attribution | Future artifacts not yet available to inspect |
+| HiDevs registration | Explicit required administrative task | Not verified |
+| Submit on HiDevs by September 20, 2026, 23:59 IST | Deadline and official event route recorded | Form not inspected; no submission |
+| Meaningful Moss retrieval | Default live backend, evidence trace and matched performance comparison | Planned, not implemented |
+| Functional theme-aligned application | Voice plus agent reliability/evaluation; complete operational flow | Planned, not implemented |
+| GitHub source and setup | Section 23 artifact contract | Not created |
+| Deployed working agent/application | Section 23 live-workflow acceptance | Not deployed |
+| Diagram of architecture/retrieval | Section 23 diagram contract | Not created |
+| PRD with problem/users/solution/requirements | Section 23 PRD contract | Not created |
+| Working demo explaining Moss | Section 23 video contract | Not recorded |
+| Additional submission form instructions/organizer updates | Check before final submission; do not infer absent constraints | Still to verify |
+
+Conclusion: published project requirements are covered by the plan. Full entry compliance cannot be certified until the pending participant, form, and actual-deliverable checks are completed. The unresolved event mismatch is no longer a concern.
