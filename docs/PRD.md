@@ -47,12 +47,32 @@ matching PLAN.md section 4's decision table exactly:
 4. Every claim family originally scoped (fasting duration, arrival offset, coverage, required
    documents, cost, appointment windows) is covered by the typed route; nonnumeric/untyped claims
    route to a genuine local entailment model, not a similarity threshold (section 10).
-5. The gate's own latency is measured, not asserted (section 5) — currently typed-route p50/p95
+5. The gate's own latency is measured, not asserted (section 5) — typed-route p50/p95
    sub-millisecond, semantic-route warm p50 ~7ms model-only, in-process, on real benchmark cases
-   defined in `bench/`.
+   defined in `bench/`. In the one live end-to-end run, the gate resolved a real Moss + real Groq
+   turn in 9.76ms.
 
-## What this PRD does not claim
+## What's proven since this PRD was first written (updated 2026-09-13)
 
-No customer interviews have happened yet. No deployed link exists yet. No end-to-end voice call has
-been run. No claim in this document is a substitute for the evidence still required by
+- **Deployed and live:** https://hesitate-api.onrender.com
+- **The core premise is proven true against the real sponsor service:** real Moss retrieval,
+  queried against a real project, ranks a stale policy document above the current one for the
+  natural patient question (confirmed twice, live) — exactly the failure this product exists to
+  catch, not a constructed scenario.
+- **The full loop has run live, once, end to end:** real Moss retrieval → real Groq LLM → the gate
+  → a real correction, all real, nothing mocked (`tests/test_end_to_end_live.py`).
+- **A real production bug was found and fixed live:** a factual claim phrased as a vague range
+  ("fast for 8-12 hours") produced zero typed claims and silently passed as supported. A
+  completeness check now catches this class of gap.
+- **Reusability is demonstrated, not asserted:** the identical gate runs unmodified inside a second,
+  non-voice text agent (`examples/text_chat_agent.py`).
+
+## What this PRD still does not claim
+
+**No customer interviews have happened yet** — still the single largest unvalidated assumption in
+this document. **No real human has joined a live call via browser and microphone and spoken to the
+agent** — the voice pipeline's individual pieces (LiveKit connection, Deepgram STT, silero VAD) are
+each confirmed live and working, but a real end-to-end voice turn has not been observed; a gap was
+found in a synthetic-audio test script (not the production path) and is tracked in
+`COMPETITION.md`, unresolved. No claim in this document substitutes for the evidence in
 `COMPETITION.md`'s ledger — that ledger, not this PRD, is the source of truth for what is proven.
