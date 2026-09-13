@@ -81,7 +81,7 @@ All unchecked. Record evidence paths/URLs and dates when completed; an accepted 
 - [ ] Held-out results and baseline comparison published with denominators.
 - [ ] Latency includes buffering and user-visible response time.
 - [ ] First-time user can explain the result; stakeholder evidence is honestly labeled.
-- [x] Deployed application tested from fresh browser/mobile network. **LIVE: https://hesitate.onrender.com** — /health and /gate/demo confirmed 200 OK, real gate output (2026-09-13).
+- [x] Deployed application tested from fresh browser/mobile network. **LIVE: https://hesitate-api.onrender.com** — /health, /gate/demo, /token, and /call.html all confirmed 200 OK with real output (2026-09-13). Recreated once from the original `hesitate.onrender.com` service after finding a real bug: env vars were never actually set on Render (only existed locally in .env), causing /token to fail with KeyError at runtime. The `render services update` CLI command has no env-var flag, so the fix was creating a fresh service with env vars set at creation time, verifying it, then deleting the broken one — not silently working around it.
 - [ ] Microphone denied, disconnect, loading, timeout, and quota states usable.
 - [x] Credentials protected; duration/concurrency/token limits verified. All 5 provider keys
   (Moss, LiveKit, Deepgram, ElevenLabs, Groq) live in `.env`, confirmed gitignored, never committed

@@ -7,9 +7,17 @@ evidence ledger tracking what's actually built vs. claimed.
 
 ## What's real right now
 
-The verification gate: typed extraction → structured policy resolution → deterministic correction,
-plus a standalone Tier 2 semantic route for nonnumeric claims. No voice pipeline, no live Moss
-connection, no deployment yet — see `docs/ARCHITECTURE.md` for the exact status of every component.
+**Live:** https://hesitate-api.onrender.com — `/gate/demo` runs the real verification gate,
+`/token` issues real LiveKit room tokens, `/call.html` is a browser client using the LiveKit JS SDK.
+
+**Built and tested:** the verification gate (typed extraction to structured policy resolution to
+deterministic correction, plus a standalone Tier 2 semantic route), the real Moss/LiveKit/Deepgram/
+Groq integrations (all live-verified, not mocked), and HesitateAgent overriding LiveKit's
+tts_node -- the actual interception point every generated sentence passes through.
+
+**Not yet done:** a real human hasn't joined a call via browser and microphone and spoken to the
+agent -- that's the next real milestone. See docs/ARCHITECTURE.md and COMPETITION.md for the
+exact status of every component, including bugs found and fixed along the way.
 
 ## Setup
 
