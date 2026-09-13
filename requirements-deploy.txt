@@ -1,0 +1,21 @@
+# Deps actually needed by the deployed service: web_api/main.py (FastAPI)
+# AND the LiveKit agent worker it spawns as a subprocess
+# (agent/voice/entrypoint.py). Deliberately excludes sentence-transformers
+# and torch: agent/gate/semantic.py (the Tier 2 semantic gate) is never
+# imported by the live agent or web app -- only by tests -- so installing
+# it here only cost build time and RAM for nothing. Render's free tier
+# was OOM-crash-looping running the full requirements.txt (FastAPI +
+# worker subprocess each importing the full stack); this is the fix.
+# Also excludes pytest/pytest-asyncio/requests, which are dev/test-only.
+fastapi
+livekit
+livekit-api
+livekit-agents
+livekit-plugins-deepgram
+livekit-plugins-elevenlabs
+livekit-plugins-groq
+livekit-plugins-silero
+moss
+numpy
+python-dotenv
+uvicorn[standard]
