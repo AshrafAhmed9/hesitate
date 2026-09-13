@@ -27,9 +27,22 @@ Use the more explicit 23:59 deadline in the rules rather than relying on the ove
   ElevenLabs plan before heavy voice-loop testing starts, or move dev/rehearsal TTS onto a
   free/local alternative and reserve the ElevenLabs quota for the final recorded demo + live
   finale only. Not yet decided — flagging now, before the budget is silently spent on iteration.
-- LLM provider (OpenAI/Anthropic/etc.) for agent reply generation: **not yet provided**, blocks
-  building the actual conversational loop (STT text can be fed to the gate for testing without it,
-  but nothing generates the agent's spoken replies yet).
+- LLM: Groq (`openai/gpt-oss-20b`), key verified live. Ashraf has no OpenAI/Anthropic key; Groq is
+  the deliberate substitute, and it works.
+
+**THE full loop ran live for the first time (see `tests/test_end_to_end_live.py`)**: real Moss
+retrieval returns the stale prep sheet as top-1 for "how long do I need to fast?" → real Groq LLM
+is prompted to state it as fact and does ("You should fast for 12 hours...") → the gate resolves
+the claim against the full candidate set in 9.76ms → CONTRADICTED against the current 8-hour
+record → deterministic correction produced: "Actually — 8 hours, per your prep instructions." Every
+piece of this is real: real sponsor retrieval, real LLM, real gate, real measured timing. This is
+the actual demo, not a mockup of it.
+
+**Measured finding**: `gpt-oss-20b` is a reasoning model that silently burns completion tokens on a
+hidden reasoning field before producing content — 121 reasoning tokens / 581ms for a one-sentence
+reply by default, dropped to 6 reasoning tokens / 361ms with `reasoning_effort: "low"` (now the
+default in `agent/llm/groq_client.py`). `"none"` is not a valid value for this model (HTTP 400).
+This is exactly the kind of measured-not-invented latency number PLAN.md section 5 requires.
 
 
 The [Moss pricing page](https://docs.moss.dev/docs/pricing), checked September 12, lists Developer allowance: $5 monthly credits, 500 MB storage, 50 MB monthly ingest, 10 GB monthly egress, 60 voice-minutes monthly, one project, three indexes, and unmetered local queries. Confirm account-specific balances and what voice-minute metering covers before projecting capacity. This does not include LiveKit, STT, LLM, TTS, or hosting allowances. No actual account/quota inspection or spending occurred.

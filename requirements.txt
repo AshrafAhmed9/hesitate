@@ -1,7 +1,8 @@
-sentence-transformers
-pytest
-numpy
-moss
-python-dotenv
 livekit
 livekit-agents
+moss
+numpy
+pytest
+python-dotenv
+requests
+sentence-transformers
