@@ -5,7 +5,6 @@ than being built last. This will grow into the actual dashboard API as
 the voice loop is built; every route here does something real.
 """
 import os
-import subprocess
 import sys
 import uuid
 
@@ -17,34 +16,14 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 app = FastAPI(title="Hesitate")
 
-
-def _start_agent_worker_in_background() -> None:
-    """Render's free tier only allows `web_service` (a bound port);
-    `background_worker` requires a paid plan. The LiveKit agent worker has
-    no HTTP server of its own that satisfies Render's port check, so it
-    is run as a background thread inside this same web service instead of
-    a separate process -- this is the actual fix for the "call connects
-    but nothing happens" bug: no agent worker was ever running against
-    the deployed room, only this FastAPI app. Gated by an env var so
-    local `uvicorn` dev runs (and tests importing this module) don't
-    also spin up a real LiveKit worker by accident.
-
-    Spawned as a real subprocess, not a thread: the worker CLI registers
-    OS signal handlers (`loop.add_signal_handler`), which only works on
-    a process's main thread -- running it in a background thread inside
-    this process would raise ValueError at startup."""
-    if os.environ.get("HESITATE_RUN_AGENT_WORKER") != "1":
-        return
-
-    repo_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    subprocess.Popen(
-        [sys.executable, "-m", "agent.voice.entrypoint", "start"],
-        cwd=repo_root,
-        env=os.environ.copy(),
-    )
-
-
-_start_agent_worker_in_background()
+# The LiveKit agent worker runs as its own deployed service
+# (worker_service/main.py), not as a subprocess of this one. Running
+# both FastAPI and a full livekit-agents worker in one Render free-tier
+# container (512MB) OOM-crash-looped even after trimming torch/
+# sentence-transformers out of the deployed deps -- see
+# requirements-deploy.txt and worker_service/main.py's docstring for
+# the real findings. Splitting them into two free-tier services (each
+# gets its own 512MB) fixed it without paying for a bigger plan.
 
 
 @app.get("/")
