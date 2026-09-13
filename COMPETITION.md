@@ -51,6 +51,26 @@ The [Moss LiveKit guide](https://docs.moss.dev/docs/integrations/livekit) docume
 
 Planned budget worksheet: total developer rehearsals + judge sessions × session duration; cost/minute for each provider; startup/hosting costs; available credit; enforced concurrency/duration; fallback behavior. Values pending a real account and deployment check. Budget active/staged/retained policy snapshots and separate session indexes explicitly. Verify quota behavior before claiming the full update/rollback/session workflow fits the account. Persist only consented/redacted records required by the operational workflow.
 
+## Live voice pipeline test (2026-09-13)
+
+Ran a real LiveKit agent worker (`python -m agent.voice.entrypoint connect --room hesitate-demo`)
+against a synthetic caller (`scripts/synthetic_caller.py`) publishing real, locally-synthesized
+speech (macOS `say` + ffmpeg, zero cost, no human needed) into the room. This is the first live
+test of the actual voice pipeline, not isolated unit tests.
+
+**Confirmed real and working:** LiveKit room connection, token issuance, silero VAD loading, a real
+Deepgram STT WebSocket connection established against the live project. GuardedTTS's dev-mode
+silence path (no ElevenLabs calls made — confirmed by log absence and by the standalone tests).
+
+**Found, not fixed: no transcript ever appeared** after the Deepgram connection, across three runs
+and a 50-second window. Root cause suspected: the synthetic caller constructs `rtc.AudioFrame`
+directly from raw PCM bytes (`scripts/synthetic_caller.py`), and that byte-level construction is
+likely malformed or misaligned — a real browser's WebRTC mic capture doesn't go through this
+hand-rolled path and wouldn't have the same problem. Stopped debugging binary frame internals
+further per instruction to report rather than keep guessing. **Next step: test via `call.html` with
+an actual human + browser microphone**, which sidesteps the synthetic caller entirely, or fix the
+frame construction if another synthetic test is wanted first.
+
 ## Claims ledger
 
 | Intended claim | Required evidence | Current status |

@@ -4,6 +4,7 @@ livekit-agents
 livekit-plugins-deepgram
 livekit-plugins-elevenlabs
 livekit-plugins-groq
+livekit-plugins-silero
 moss
 numpy
 pytest

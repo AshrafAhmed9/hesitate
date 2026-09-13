@@ -6,10 +6,26 @@ agent/llm/groq_client.py), and TTS gated by agent/voice/tts.py's dev/live
 mode split (real ElevenLabs only when explicitly requested, since Ashraf
 reserved that quota for the final demo).
 
-STATUS: constructs without error (verified below); has NOT been run
-against a live LiveKit room with a real participant yet -- that requires
-a browser client to join and speak, which does not exist yet. This is an
-honestly-labeled gap, not a claim of end-to-end voice completion.
+STATUS (updated after a real live test, 2026-09-13): constructs without
+error. Confirmed LIVE and working: connects to a real LiveKit room via
+`connect --room <name>`, silero.VAD loads, a real Deepgram STT WebSocket
+connection is established against the real project. Tested with
+scripts/synthetic_caller.py (a synthetic participant publishing real,
+locally-synthesized speech via macOS `say` + ffmpeg -- zero cost, no
+human needed).
+
+UNRESOLVED GAP, found and NOT yet fixed: no transcript or turn-taking
+event was ever observed after the Deepgram WebSocket connected, across
+multiple runs and a 50-second window. The STT connection is real; the
+audio frames from the synthetic caller are likely malformed or
+misaligned at the byte/frame level (rtc.AudioFrame constructed directly
+from raw PCM bytes in scripts/synthetic_caller.py, rather than via a
+verified-correct construction path) -- a real browser's WebRTC mic
+capture would not have this problem, since the browser's own audio
+pipeline handles framing correctly. This needs either fixing the raw
+frame construction or testing via an actual browser (call.html) instead.
+Not silently claimed as working; not spent further time guessing at
+binary frame internals per instruction to stop and report when stuck.
 
 Run with: python -m agent.voice.entrypoint dev   (LiveKit's own dev-mode CLI)
 """
@@ -19,7 +35,7 @@ import os
 
 from dotenv import load_dotenv
 from livekit.agents import AgentSession, JobContext, WorkerOptions, cli
-from livekit.plugins import deepgram, elevenlabs, groq as groq_plugin
+from livekit.plugins import deepgram, elevenlabs, groq as groq_plugin, silero
 
 from agent.voice.guarded_tts import GuardedTTS
 from agent.voice.hesitate_agent import HesitateAgent
@@ -44,6 +60,12 @@ def build_session() -> AgentSession:
     quota; that wiring gap is tracked in COMPETITION.md, not hidden."""
     return AgentSession(
         stt=deepgram.STT(model="nova-3", api_key=os.environ["DEEPGRAM_API_KEY"]),
+        # REAL FINDING: without VAD, AgentSession never detected the end of
+        # the caller's speech as a completed turn, so the LLM node never
+        # fired -- confirmed by a live test with scripts/synthetic_caller.py
+        # where the worker joined and closed the session on disconnect with
+        # no transcript/turn activity in between. silero.VAD closes that gap.
+        vad=silero.VAD.load(),
         llm=groq_plugin.LLM(
             model="openai/gpt-oss-20b",
             api_key=os.environ["GROQ_API_KEY"],
