@@ -21,6 +21,7 @@ from dotenv import load_dotenv
 from livekit.agents import AgentSession, JobContext, WorkerOptions, cli
 from livekit.plugins import deepgram, elevenlabs, groq as groq_plugin
 
+from agent.voice.guarded_tts import GuardedTTS
 from agent.voice.hesitate_agent import HesitateAgent
 from corpus.policy_records import RECORDS
 
@@ -48,7 +49,11 @@ def build_session() -> AgentSession:
             api_key=os.environ["GROQ_API_KEY"],
             reasoning_effort="low",
         ),
-        tts=elevenlabs.TTS(api_key=os.environ["ELEVENLABS_API_KEY"]),
+        # Wrapped in GuardedTTS: real ElevenLabs is only called when
+        # HESITATE_TTS_MODE=live is set explicitly. Default is silent
+        # dev mode, so running this entrypoint against a real room never
+        # accidentally spends the quota reserved for the final demo.
+        tts=GuardedTTS(elevenlabs.TTS(api_key=os.environ["ELEVENLABS_API_KEY"])),
     )
 
 
