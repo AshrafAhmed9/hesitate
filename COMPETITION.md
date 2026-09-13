@@ -26,15 +26,16 @@ Planned budget worksheet: total developer rehearsals + judge sessions × session
 
 | Intended claim | Required evidence | Current status |
 |---|---|---|
-| Candidate cannot bypass speech boundary | TTS input tests and end-to-end audio trace including correction and cancellation | Not implemented |
-| Handles the declared administrative policy forms | Locked held-out outcomes, coverage and failure counts | Not measured |
-| Resolves current/stale/conflicting policy correctly | Applicability, supersession, full-key conflict tests | Not implemented |
-| Moss contributes useful retrieval | Runtime trace and fair local baseline | Not measured |
+| Candidate cannot bypass speech boundary | TTS input tests and end-to-end audio trace including correction and cancellation | Not implemented — no LiveKit/TTS connection exists yet |
+| Handles the declared administrative policy forms | Locked held-out outcomes, coverage and failure counts | Partial: 6 typed families implemented and tested (13/13 starter cases, `bench/cases.py` + `bench/run_benchmark.py`); 200-case locked holdout suite not built |
+| Resolves current/stale/conflicting policy correctly | Applicability, supersession, full-key conflict tests | **Implemented and tested.** `agent/gate/resolve.py`: explicit supersession chain (`corpus/policy_records.py`), unresolved-conflict detection distinct from missing-evidence. 15/15 pytest incl. `test_contradicted_never_releases_original_text` |
+| Moss contributes useful retrieval | Runtime trace and fair local baseline | Not measured — no live Moss connection; `resolve.py` takes `list[PolicyRecord]` directly so it's testable without one, but that means Moss's actual contribution is still unmeasured |
 | Remains usable | Correct completion/refusal metrics and observed user test | Not measured |
-| Adds acceptable response delay | Paired full-turn timing including buffering | Not measured |
+| Adds acceptable response delay | Paired full-turn timing including buffering | Partial: typed-route gate latency measured at p50=0.008ms p95=0.59ms on 13 cases (`bench/run_benchmark.py`, in-process, no network) — not the full-turn/buffering measurement section 5 requires, and n=13 is far below the 1,000-evaluation target |
 | Has plausible customer value | Anonymized stakeholder observation; proxy clearly separated | Not validated |
+| Semantic (nonnumeric) claims verified by genuine entailment, not similarity | Measured accuracy + latency of a real NLI model, separate from the typed route | **Model wired and benchmarked standalone**: cross-encoder/nli-deberta-v3-xsmall, 4/4 starter cases, warm p50=6.9ms/p95=8.7ms model-only (`bench/run_semantic_benchmark.py`). One real model limitation found and documented (89% confident false-contradiction on an off-topic pair — see `agent/gate/semantic.py`). **Not yet wired into the sentence-level gate**: needs a decomposition step (LLM call) that requires an API key/account decision |
 
-No 31 ms, 188/200, universal safety, exclusive feasibility, customer outcome, or placement probability is a measured fact. Raw benchmark artifacts and hashes belong in `bench/` only when generated.
+No 31 ms, 188/200, universal safety, exclusive feasibility, customer outcome, or placement probability is a measured fact. The only measured numbers as of this update are the ones stated above with their source file. Raw benchmark artifacts and hashes belong in `bench/` only when generated.
 
 ## Submission checklist
 
