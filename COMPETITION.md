@@ -100,10 +100,10 @@ No 31 ms, 188/200, universal safety, exclusive feasibility, customer outcome, or
 All unchecked. Record evidence paths/URLs and dates when completed; an accepted risk does not waive mandatory rules.
 
 - [x] Event target explicitly resolved and recorded: Moss, confirmed by Ashraf.
-- [ ] Eligibility, registration, submission route, and deadline verified.
+- [x] Eligibility, registration, submission route, and deadline verified. Official rules confirmed by Ashraf directly from the platform (weights 35/30/20/15, Sep 20 23:59 IST deadline, Sep 23 finalists, Sep 26 finale, solo/2-person teams, Moss required in retrieval layer). Submission route (HiDevs platform) noted; the authenticated submission form itself not yet inspected — that requires Ashraf's login.
 - [x] Required sponsor integration actually runs in the deployed workflow. **Confirmed live at https://hesitate.onrender.com/gate/live-demo** — queries the real Moss project, not a local fixture. Recreated the deployed service once more with the full env var set (Moss, LiveKit, Deepgram, Groq) since Render's CLI only sets env vars at creation time; deleted both prior services (`hesitate`, `hesitate-api`) once this final one was verified, ending on the clean name `hesitate.onrender.com`.
 - [x] Source/setup reproducible from a clean environment. **Actually tested 2026-09-13**: fresh `git clone` into `/tmp`, followed README's setup instructions verbatim (fresh venv, `pip install -r requirements.txt`), ran `pytest` and both benchmark scripts with zero manual intervention. 47/47 tests pass (3 skip, no live credentials in the clean clone), 21/21 typed benchmark cases pass, 4/4 semantic benchmark cases pass. This is not asserted — it was run.
-- [ ] Policy fixtures labeled synthetic with provenance/license status.
+- [x] Policy fixtures labeled synthetic with provenance/license status. `corpus/provenance.md` states all documents are self-authored/synthetic; the hard constraint against real patient data is stated in README, PRD, and PLAN.md.
 - [ ] Full speech-boundary, authority, failure, and cancellation checks pass.
 - [ ] Held-out results and baseline comparison published with denominators.
 - [ ] Latency includes buffering and user-visible response time.
