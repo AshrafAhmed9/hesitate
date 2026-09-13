@@ -53,7 +53,7 @@ def main() -> int:
         print(f"  {k}: {v}")
 
     print()
-    print("STATUS: starter suite (20 cases). PLAN.md section 5 specifies a")
+    print("STATUS: starter suite (21 cases). PLAN.md section 5 specifies a")
     print("200-case suite (100 dev / 100 holdout, independently human-reviewed,")
     print("locked holdout hash) as the actual evaluation target. Not yet built.")
 
