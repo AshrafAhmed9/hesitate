@@ -117,4 +117,14 @@ if __name__ == "__main__":
     # the worker running and registered. Raised above 1.0 so the worker
     # always accepts jobs on this tier; there is only ever one call at a
     # time in this demo, so no real capacity risk.
-    cli.run_app(WorkerOptions(entrypoint_fnc=entrypoint, load_threshold=1.5))
+    #
+    # SECOND REAL FINDING (2026-09-13): in production mode this worker
+    # also opens its own internal HTTP server on port 8081 (health/drain
+    # endpoints, unrelated to the app's own web server). Render's
+    # deployed-service log showed "Detected a new open port HTTP:8081"
+    # right after this worker started -- Render's port auto-detection
+    # got confused by a second open port in the same container/service
+    # and the service kept restarting roughly every 60-90s afterward.
+    # port=0 disables that internal server; nothing in this repo uses
+    # it (no external LiveKit-side health/drain polling is configured).
+    cli.run_app(WorkerOptions(entrypoint_fnc=entrypoint, load_threshold=1.5, port=0))
