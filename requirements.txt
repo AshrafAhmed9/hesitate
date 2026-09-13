@@ -1,9 +1,13 @@
 fastapi
 livekit
 livekit-agents
+livekit-plugins-deepgram
+livekit-plugins-elevenlabs
+livekit-plugins-groq
 moss
 numpy
 pytest
+pytest-asyncio
 python-dotenv
 requests
 sentence-transformers
