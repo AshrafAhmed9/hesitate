@@ -44,7 +44,7 @@ Updated 2026-09-13 after live account integration and a first live voice-pipelin
 | `HesitateAgent` (overrides LiveKit's `tts_node`) | Implemented, unit-tested (4/4) at the text/buffering level |
 | LiveKit voice pipeline (STT/VAD/LLM/TTS wired) | **Partially proven live.** Real room connection, real Deepgram STT WebSocket connection, silero VAD all confirmed working against a synthetic caller. **Gap found and not yet closed:** no transcript ever appeared — suspected malformed raw audio frames in the synthetic-caller test script, not in the production path. Needs testing via a real browser + microphone (`call.html`) next |
 | TTS quota guard (`GuardedTTS`) | Implemented, tested (2/2) — real ElevenLabs provider is never called unless `HESITATE_TTS_MODE=live` is set explicitly, verified with a deliberately invalid API key |
-| Deployment | **Live:** https://hesitate-api.onrender.com (`/health`, `/gate/demo`, `/token`, `/call.html` all confirmed 200 OK). One production bug found and fixed: environment variables were never actually set on the deployed service |
+| Deployment | **Live:** https://hesitate.onrender.com (`/health`, `/gate/demo`, `/token`, `/call.html` all confirmed 200 OK). One production bug found and fixed: environment variables were never actually set on the deployed service |
 | Dashboard / call UI beyond the bare test page | Not built |
 
 This document is regenerated as pieces close; it is not written aspirationally ahead of the code. See

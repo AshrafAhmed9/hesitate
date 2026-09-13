@@ -54,7 +54,7 @@ matching PLAN.md section 4's decision table exactly:
 
 ## What's proven since this PRD was first written (updated 2026-09-13)
 
-- **Deployed and live:** https://hesitate-api.onrender.com
+- **Deployed and live:** https://hesitate.onrender.com
 - **The core premise is proven true against the real sponsor service:** real Moss retrieval,
   queried against a real project, ranks a stale policy document above the current one for the
   natural patient question (confirmed twice, live) — exactly the failure this product exists to

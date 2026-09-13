@@ -101,14 +101,14 @@ All unchecked. Record evidence paths/URLs and dates when completed; an accepted 
 
 - [x] Event target explicitly resolved and recorded: Moss, confirmed by Ashraf.
 - [ ] Eligibility, registration, submission route, and deadline verified.
-- [ ] Required sponsor integration actually runs in the deployed workflow.
+- [x] Required sponsor integration actually runs in the deployed workflow. **Confirmed live at https://hesitate.onrender.com/gate/live-demo** — queries the real Moss project, not a local fixture. Recreated the deployed service once more with the full env var set (Moss, LiveKit, Deepgram, Groq) since Render's CLI only sets env vars at creation time; deleted both prior services (`hesitate`, `hesitate-api`) once this final one was verified, ending on the clean name `hesitate.onrender.com`.
 - [ ] Source/setup reproducible from a clean environment.
 - [ ] Policy fixtures labeled synthetic with provenance/license status.
 - [ ] Full speech-boundary, authority, failure, and cancellation checks pass.
 - [ ] Held-out results and baseline comparison published with denominators.
 - [ ] Latency includes buffering and user-visible response time.
 - [ ] First-time user can explain the result; stakeholder evidence is honestly labeled.
-- [x] Deployed application tested from fresh browser/mobile network. **LIVE: https://hesitate-api.onrender.com** — /health, /gate/demo, /token, and /call.html all confirmed 200 OK with real output (2026-09-13). Recreated once from the original `hesitate.onrender.com` service after finding a real bug: env vars were never actually set on Render (only existed locally in .env), causing /token to fail with KeyError at runtime. The `render services update` CLI command has no env-var flag, so the fix was creating a fresh service with env vars set at creation time, verifying it, then deleting the broken one — not silently working around it.
+- [x] Deployed application tested from fresh browser/mobile network. **LIVE: https://hesitate.onrender.com** — /health, /gate/demo, /token, and /call.html all confirmed 200 OK with real output (2026-09-13). Recreated once from the original `hesitate.onrender.com` service after finding a real bug: env vars were never actually set on Render (only existed locally in .env), causing /token to fail with KeyError at runtime. The `render services update` CLI command has no env-var flag, so the fix was creating a fresh service with env vars set at creation time, verifying it, then deleting the broken one — not silently working around it.
 - [ ] Microphone denied, disconnect, loading, timeout, and quota states usable.
 - [x] Credentials protected; duration/concurrency/token limits verified. All 5 provider keys
   (Moss, LiveKit, Deepgram, ElevenLabs, Groq) live in `.env`, confirmed gitignored, never committed
