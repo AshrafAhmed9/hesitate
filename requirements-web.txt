@@ -1,8 +1,11 @@
 # Minimal deps for web_api/main.py's deployed service. /gate/demo only
 # imports agent.gate.verify + corpus.policy_records, which are pure
-# Python (no numpy/torch/moss/livekit needed) -- keeping this separate
-# from requirements.txt (the full dev/test environment) so the deployed
-# free-tier Render service builds fast and stays within its memory limit
-# instead of installing sentence-transformers/torch it never uses.
+# Python (no numpy/torch/moss needed). livekit (api only, not
+# livekit-agents/plugins) is needed for /token's issue_room_token --
+# lightweight, no torch pulled in. Keeping this separate from
+# requirements.txt (the full dev/test environment) so the deployed
+# free-tier Render service builds fast and stays within its memory limit.
 fastapi
+livekit
+python-dotenv
 uvicorn[standard]

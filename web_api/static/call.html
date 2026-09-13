@@ -1,0 +1,78 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Hesitate — call the clinic agent</title>
+<script src="https://cdn.jsdelivr.net/npm/livekit-client@2/dist/livekit-client.umd.min.js"></script>
+<style>
+  body { font-family: system-ui, sans-serif; max-width: 480px; margin: 60px auto; padding: 0 20px; }
+  button { font-size: 16px; padding: 12px 24px; border-radius: 8px; border: none; cursor: pointer; }
+  #connect { background: #16a34a; color: white; }
+  #hangup { background: #dc2626; color: white; }
+  #status { margin-top: 16px; color: #555; }
+  #log { margin-top: 16px; font-size: 13px; color: #888; white-space: pre-wrap; }
+</style>
+</head>
+<body>
+  <h2>Hesitate — Clinic Voice Agent (test call)</h2>
+  <p>This connects your microphone to the real deployed voice agent over LiveKit.
+     Real STT, real LLM, real verification gate. Not yet connected to a running
+     agent worker — the worker itself needs to be running separately (see repo).</p>
+  <button id="connect">Start call</button>
+  <button id="hangup" disabled>Hang up</button>
+  <div id="status">Not connected.</div>
+  <div id="log"></div>
+
+<script>
+const statusEl = document.getElementById('status');
+const logEl = document.getElementById('log');
+let room = null;
+
+function log(msg) {
+  logEl.textContent += msg + "\n";
+}
+
+document.getElementById('connect').onclick = async () => {
+  statusEl.textContent = "Fetching token...";
+  const resp = await fetch('/token');
+  if (!resp.ok) {
+    statusEl.textContent = "Failed to get token: " + resp.status;
+    return;
+  }
+  const { token, url, room: roomName } = await resp.json();
+  log("Got token for room: " + roomName);
+
+  room = new LivekitClient.Room();
+  room.on(LivekitClient.RoomEvent.TrackSubscribed, (track) => {
+    if (track.kind === 'audio') {
+      const el = track.attach();
+      document.body.appendChild(el);
+      log("Subscribed to agent audio track.");
+    }
+  });
+  room.on(LivekitClient.RoomEvent.Disconnected, () => {
+    statusEl.textContent = "Disconnected.";
+    document.getElementById('connect').disabled = false;
+    document.getElementById('hangup').disabled = true;
+  });
+
+  try {
+    await room.connect(url, token);
+    statusEl.textContent = "Connected to room: " + roomName;
+    log("Connected. Enabling microphone...");
+    await room.localParticipant.setMicrophoneEnabled(true);
+    log("Microphone enabled. Waiting for agent to join...");
+    document.getElementById('connect').disabled = true;
+    document.getElementById('hangup').disabled = false;
+  } catch (e) {
+    statusEl.textContent = "Connection failed: " + e.message;
+    log("Error: " + e.message);
+  }
+};
+
+document.getElementById('hangup').onclick = () => {
+  if (room) room.disconnect();
+};
+</script>
+</body>
+</html>
