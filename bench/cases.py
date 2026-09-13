@@ -68,4 +68,28 @@ CASES = [
     ("Thanks for calling, how can I help you today?", RECORDS, Decision.SUPPORTED, "released"),
     # Unresolved conflict: two equally-applicable current records disagree.
     ("You'll need to fast for 8 hours.", _CONFLICTING, Decision.CONFLICT, "declined"),
+
+    # --- Depth additions (PLAN.md section 6): unit normalization, compound
+    # claims, decimal precision -- not just one phrasing per attribute. ---
+
+    # Unit normalization: 480 minutes == 8 hours, should match the current record.
+    ("Fast for 480 minutes before the test.", RECORDS, Decision.SUPPORTED, "released"),
+    # Unit normalization, wrong: 700 minutes != 8 hours (== 11h40m, not even
+    # close to the stale 12h record either -- tests that normalization
+    # doesn't accidentally match on rounding).
+    ("Fast for 700 minutes before the test.", RECORDS, Decision.CONTRADICTED, "corrected"),
+    # Compound claim, both correct: PLAN.md section 4 -- multiple atomic
+    # claims in one sentence must ALL be checked, not just the first found.
+    ("You will need to fast for 8 hours and it costs $150.", RECORDS, Decision.SUPPORTED, "released"),
+    # Compound claim, ONE wrong: "one true number cannot approve a mixed
+    # sentence" (PLAN.md section 4) -- the correct fasting duration must
+    # not mask the hallucinated cost.
+    ("You will need to fast for 8 hours and it costs $200.", RECORDS, Decision.CONTRADICTED, "corrected"),
+    # Compound claim, the OTHER one wrong -- order shouldn't matter.
+    ("You will need to fast for 12 hours and it costs $150.", RECORDS, Decision.CONTRADICTED, "corrected"),
+    # Decimal cost precision: $150.50 is not $150.00, must not be treated
+    # as "close enough" -- correctness on money is non-negotiable.
+    ("The cost is $150.50.", RECORDS, Decision.CONTRADICTED, "corrected"),
+    # Decimal cost, exact match at cent precision.
+    ("The cost is $150.00.", RECORDS, Decision.SUPPORTED, "released"),
 ]
