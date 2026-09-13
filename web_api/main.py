@@ -16,14 +16,18 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 app = FastAPI(title="Hesitate")
 
-# The LiveKit agent worker runs as its own deployed service
-# (worker_service/main.py), not as a subprocess of this one. Running
-# both FastAPI and a full livekit-agents worker in one Render free-tier
-# container (512MB) OOM-crash-looped even after trimming torch/
-# sentence-transformers out of the deployed deps -- see
-# requirements-deploy.txt and worker_service/main.py's docstring for
-# the real findings. Splitting them into two free-tier services (each
-# gets its own 512MB) fixed it without paying for a bigger plan.
+# The LiveKit agent worker (agent/voice/entrypoint.py) is NOT deployed
+# here or anywhere on Render. It was tried three ways on Render's free
+# tier -- as a subprocess of this service, after trimming torch/
+# sentence-transformers out of the deploy deps, and in its own
+# dedicated free-tier service -- and crash-looped every time (~45-90s
+# restart cycle); the plugin stack (deepgram+elevenlabs+groq+silero)
+# simply doesn't fit free-tier RAM for more than about a minute. See
+# agent/voice/entrypoint.py's docstring for the full finding. Per
+# Ashraf's decision, the worker runs from a local machine for demos and
+# the live finale instead of a paid Render plan; this deployed service
+# still serves call.html, issues tokens, and demonstrates the
+# verification gate against live Moss (/gate/live-demo) on its own.
 
 
 @app.get("/")

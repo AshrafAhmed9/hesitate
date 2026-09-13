@@ -78,6 +78,47 @@ guessing, per instruction. **Next step: test via `call.html` with an actual huma
 microphone**, which sidesteps the synthetic caller's hand-rolled audio-publishing path entirely and
 is the more likely path to actually work.
 
+## Live voice pipeline: real root cause found, and a real deployment limit (2026-09-14)
+
+Ashraf tried the deployed `call.html` from a real browser and reported "nothing happened." The
+actual root cause was much simpler than the transcript gap above: **no agent worker had ever been
+deployed persistently.** Every prior live test ran `agent/voice/entrypoint.py` manually in a local
+background shell and killed it afterward — the deployed web service only ever ran `web_api/main.py`
+(FastAPI). This was fixed and then hit a second, real constraint:
+
+1. Ran the worker as a subprocess of the `web_api` Render service, gated by an env var. It
+   registered with LiveKit successfully — real progress — but immediately self-reported "full
+   capacity" (load 0.98–0.99 against the default 0.7 threshold) purely from import/warm-up cost on
+   Render free tier's fractional CPU share, so it never accepted a job. Fixed with
+   `WorkerOptions(load_threshold=1.5)`.
+2. The combined service then crash-looped (restarting every 60–90s). Split `sentence-transformers`/
+   `torch` out into a new `requirements-deploy.txt` after confirming `agent/gate/semantic.py` (the
+   only consumer of those packages) is never imported by the deployed agent or web app — only by
+   tests. Crash-loop persisted.
+3. Split the worker into its own dedicated free-tier Render service (`worker_service/main.py`,
+   since deleted), so it wasn't sharing a container with FastAPI. Still crash-looped, now alone.
+4. Tried disabling the worker's internal HTTP server (port 8081, unrelated to the app's web server)
+   after seeing "Detected a new open port HTTP:8081" in Render's deploy log right as restarts
+   started, on the theory that Render's port auto-detection was confused by two open ports. Checked
+   `livekit/agents/worker.py` directly: `port=0` just means "OS picks a random port," not "disabled"
+   — there is no way to disable that server in this library version. The crash-loop continued
+   unchanged after this fix too, ruling the theory out.
+
+**Four real attempts, all addressing plausible causes, none fixing it.** The honest conclusion:
+Render's free tier (~512MB) cannot sustain deepgram + elevenlabs + groq + silero/onnxruntime loaded
+together for more than about a minute, independent of memory trimming or container isolation. This
+is a real resource ceiling, not a bug in this repo.
+
+**Decision (Ashraf's call, not a workaround I chose unilaterally):** the agent worker is not
+deployed on Render. It runs from a local machine (`python -m agent.voice.entrypoint start`) for
+demos and the live Sep 26 finale. Paying for a bigger Render plan (~$7/mo Starter, 2GB RAM) was the
+alternative and was explicitly declined in favor of staying free. The deployed web service
+(`https://hesitate-v2.onrender.com`) still serves `call.html`, issues LiveKit tokens, and
+demonstrates the verification gate against live Moss (`/gate/live-demo`) on its own — only the
+voice worker itself needs to be started locally before a live call can be answered. This is recorded
+as an accepted limitation, not hidden: **freeze checklist item 5 (show the system's limits)** notes
+this explicitly, and the demo video/PRD should state plainly that the agent worker runs locally.
+
 ## Claims ledger
 
 | Intended claim | Required evidence | Current status |

@@ -118,13 +118,21 @@ if __name__ == "__main__":
     # always accepts jobs on this tier; there is only ever one call at a
     # time in this demo, so no real capacity risk.
     #
-    # SECOND REAL FINDING (2026-09-13): in production mode this worker
-    # also opens its own internal HTTP server on port 8081 (health/drain
-    # endpoints, unrelated to the app's own web server). Render's
-    # deployed-service log showed "Detected a new open port HTTP:8081"
-    # right after this worker started -- Render's port auto-detection
-    # got confused by a second open port in the same container/service
-    # and the service kept restarting roughly every 60-90s afterward.
-    # port=0 disables that internal server; nothing in this repo uses
-    # it (no external LiveKit-side health/drain polling is configured).
-    cli.run_app(WorkerOptions(entrypoint_fnc=entrypoint, load_threshold=1.5, port=0))
+    # DEPLOYMENT FINDING (2026-09-13): this worker was tried on Render's
+    # free tier (~512MB) three ways -- as a subprocess of the web_api
+    # service, after trimming torch/sentence-transformers out of the
+    # deploy deps, and split into its own dedicated free-tier service --
+    # and it crash-looped (restarting every 45-90s) every time, even
+    # alone in its own container. A `port=0` HTTP-server-collision theory
+    # was tried and ruled out: worker.py's ServerEnvOption.getvalue just
+    # picks an OS-assigned port for 0, it does not disable the server,
+    # and the crash-loop persisted anyway. The honest read is that
+    # deepgram+elevenlabs+groq+silero's combined footprint exceeds what
+    # Render's free plan allows for more than about a minute. Per
+    # Ashraf's decision, this worker is NOT deployed on Render for the
+    # free tier -- it is run from a local machine (`python -m
+    # agent.voice.entrypoint start`) for demos and the live finale,
+    # documented as an accepted limitation in COMPETITION.md rather than
+    # papered over. The deployed web service (call.html, /token,
+    # /gate/*) stays on Render regardless.
+    cli.run_app(WorkerOptions(entrypoint_fnc=entrypoint, load_threshold=1.5))
