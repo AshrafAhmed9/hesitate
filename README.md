@@ -7,7 +7,7 @@ evidence ledger tracking what's actually built vs. claimed.
 
 ## What's real right now
 
-**Live:** https://hesitate.onrender.com — `/gate/demo` runs the real verification gate,
+**Live:** https://hesitate-v2.onrender.com — `/gate/demo` runs the real verification gate,
 `/token` issues real LiveKit room tokens, `/call.html` is a browser client using the LiveKit JS SDK.
 
 **Built and tested:** the verification gate (typed extraction to structured policy resolution to

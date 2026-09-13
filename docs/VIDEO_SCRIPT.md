@@ -49,7 +49,7 @@ Show the CONFLICT case from `bench/cases.py` briefly if time allows.
 > "Every one of the accounts behind this is live — not simulated."
 
 Quick screen flashes (2-3 seconds each): the Moss project dashboard, the LiveKit project, the
-deployed URL `https://hesitate.onrender.com/gate/demo` returning a real response with `curl` or
+deployed URL `https://hesitate-v2.onrender.com/gate/demo` returning a real response with `curl` or
 a browser, and the GitHub repo with its commit history showing real bugs found and fixed (the
 missing-env-vars deploy bug, the completeness-check gap) — **this is stronger than hiding mistakes.**
 
