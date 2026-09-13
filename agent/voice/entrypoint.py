@@ -26,6 +26,10 @@ pipeline handles framing correctly. This needs either fixing the raw
 frame construction or testing via an actual browser (call.html) instead.
 Not silently claimed as working; not spent further time guessing at
 binary frame internals per instruction to stop and report when stuck.
+One thing ruled out: AudioFrame byte layout itself is correct (verified
+nbytes=640 for 320 int16 samples, itemsize=2, format='h') -- the bug is
+elsewhere, likely in capture_frame() timing/pacing or how the published
+track is actually being consumed server-side, not in frame construction.
 
 Run with: python -m agent.voice.entrypoint dev   (LiveKit's own dev-mode CLI)
 """
