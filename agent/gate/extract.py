@@ -40,7 +40,18 @@ def _to_number(text: str) -> Optional[float]:
 def extract_claims(text: str, site: str = "*", service: str = "fasting-bloodwork") -> list[Claim]:
     """Extract every typed claim from a sentence, tagged with the given
     site/service scope (in the real pipeline this comes from resolved
-    caller context, per section 4 -- not from the sentence text itself)."""
+    caller context, per section 4 -- not from the sentence text itself).
+
+    REAL BUG (2026-09-20, caught live in tests/test_end_to_end_live.py):
+    Groq's gpt-oss-20b wraps numbers it wants to emphasize in markdown
+    bold ('**12 hours**'). The '*' characters broke every regex here --
+    none of them treat '*' as a word boundary, so 'fast for **12
+    hours**' matched nothing and the claim silently vanished, which
+    would have let a wrong number through as "no claim, nothing to
+    check" instead of catching it. Stripping markdown emphasis before
+    extraction fixes this generally, for every claim family, instead of
+    patching each regex individually."""
+    text = re.sub(r"[*_`]+", "", text)
     claims: list[Claim] = []
 
     for m in re.finditer(
