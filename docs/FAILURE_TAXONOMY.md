@@ -16,10 +16,11 @@ completeness. Each entry links to where it was found and its current status.
 | 7 | Off-topic passage mistaken for contradiction (Tier 2 only) | NLI model scored 89% confident CONTRADICTED between two topically unrelated sentences | **No, in isolation** | Small NLI models can be overconfident on out-of-domain pairs. Mitigated in practice because Moss retrieval should only ever return topically relevant candidates, but that mitigation is unverified end-to-end | **Open**, mitigation unverified |
 | 8 | Domain-specific vocabulary gap | "police report" not recognized as a required-document type (insurance domain) | **No** | `_extract_required_document`'s vocabulary is hardcoded from the clinic domain | **Open** — silent zero-claim result, not a crash; found via the cross-domain test |
 | 9 | Condition-dependent facts in a new domain | "deductible for collision" vs a generic "$500" claim with no condition | **No** | `extract.py` never resolves `conditions` from sentence text or caller context — always defaults to `()`. Costless in the clinic domain (mostly unconditional facts); costly in insurance (routinely conditional) | **Open** — a pre-existing, now-quantified gap |
-| 10 | Voice pipeline: real audio not producing a transcript | Synthetic caller speaks; Deepgram connects; no transcript observed | **N/A — infrastructure, not a gate failure** | Two hypotheses ruled out (byte layout, identity collision); root cause still unknown | **Open**, blocking a full live voice demo |
+| 10 | Voice pipeline: real audio not producing any spoken response | A real human speaks over a real browser microphone; the agent never answers | **N/A — infrastructure, not a gate failure** | Three separate causes, all found live: no agent worker was ever actually deployed persistently; `GuardedTTS.stream()` (the dev-mode quota guard for the streaming TTS path `AgentSession` actually uses) was unimplemented and raised silently; and a reused fixed room name left a stale LiveKit dispatch record pointing at a dead worker | **Closed** — see `COMPETITION.md` for the full sequence of fixes |
 
 ## What this table is for
 
-Six of ten categories are closed, with the newest (#5) closed same-day. Four remain open, each with
-a stated reason rather than a vague "known limitations" disclaimer. This is the honest answer to
-"what does it not catch" that PLAN.md section 6 and the demo script's Segment 5 both require.
+Seven of ten categories are closed, with the newest (#10) closed same-day it was found, live, while
+recording the demo video. Three remain open, each with a stated reason rather than a vague "known
+limitations" disclaimer. This is the honest answer to "what does it not catch" that PLAN.md section
+6 and the demo script's Segment 5 both require.

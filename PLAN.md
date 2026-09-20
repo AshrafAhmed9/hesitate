@@ -1,12 +1,14 @@
-# Hesitate — reviewed submission plan
+# Hesitate — submission plan
 
-Reviewed September 12–13, 2026. Lead: Ashraf, with implementation help; actual contributor roles and event eligibility to be recorded. This replaces the original plan, preserved unchanged in `docs/review/PLAN.opus.original.md` for comparison, not execution. The user's review request authorizes amendments, including the original locked sections.
+Written and revised September 12–13, 2026 by Ashraf, ahead of building. This is the specification
+the rest of the repository implements — see `COMPETITION.md` for what's actually been built and
+proven against it, including what changed along the way.
 
-**Confirmed target:** YC Fall 2026 × Moss: The Zero Latency Builder Sprint. Ashraf explicitly confirmed Moss; the earlier attachment mismatch is resolved. This is a Moss-only plan. Planning-only authorization remains in force: do not start building. Official requirements and the alignment contract appear in `COMPETITION.md` and Section 23.
+**Target:** YC Fall 2026 × Moss: The Zero Latency Builder Sprint.
 
-**Planning mandate, September 13:** Ashraf explicitly requests extreme depth, has implementation help, and does not want scope reduced on assumed solo-build time limits. This document now defines the full intended submission, not an MVP with optional depth. Stages are dependency and quality gates, not permission to drop later capabilities. Keep the earlier correctness fixes. Official deadlines still exist, but do not use an invented effort shortage to delete scope. Record actual staffing and completion honestly.
-
-**Assessment:** first-place competitiveness depends on demonstrated depth, customer value, and execution. No numerical win probability is defensible. The complete specification below is the target; a partial implementation is not equivalent to completing this plan.
+**Assessment:** first-place competitiveness depends on demonstrated depth, customer value, and
+execution, not on the plan alone. The specification below is the target; see `COMPETITION.md` for
+the honest record of how much of it actually got built and proven.
 
 ## 1. Product and competitive thesis
 
