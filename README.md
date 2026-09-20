@@ -5,6 +5,8 @@ are spoken — not after, and not by a similarity score. Built for the YC Fall 2
 Latency Builder Sprint. See `PLAN.md` for the full specification and `COMPETITION.md` for the
 evidence ledger tracking what's actually built vs. claimed.
 
+**Demo video:** https://www.youtube.com/watch?v=l0ZynfcKPm0
+
 ## What's real right now
 
 **Live:** https://hesitate-v2.onrender.com — `/gate/demo` runs the real verification gate,
@@ -15,9 +17,10 @@ deterministic correction, plus a standalone Tier 2 semantic route), the real Mos
 Groq integrations (all live-verified, not mocked), and HesitateAgent overriding LiveKit's
 tts_node -- the actual interception point every generated sentence passes through.
 
-**Not yet done:** a real human hasn't joined a call via browser and microphone and spoken to the
-agent -- that's the next real milestone. See docs/ARCHITECTURE.md and COMPETITION.md for the
-exact status of every component, including bugs found and fixed along the way.
+**A real human has joined a call via browser and microphone** and the full loop has run live:
+speech in, a verified (or corrected) reply out. The agent worker runs locally rather than on the
+free-tier deployment -- see COMPETITION.md for why, and docs/ARCHITECTURE.md for the exact status
+of every component, including bugs found and fixed along the way.
 
 ## Setup
 
