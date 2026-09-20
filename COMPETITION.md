@@ -158,10 +158,15 @@ All unchecked. Record evidence paths/URLs and dates when completed; an accepted 
   seconds of going public — routine internet background noise, returned 404 as it should (the file
   was never pushed and FastAPI serves no arbitrary filesystem path).
 - [ ] Budget and judging-access plan tested; replay clearly distinguished from live app.
-- [ ] Required documents, public video, source links, and demo links verified.
+- [x] Required documents, public video, source links, and demo links verified. Video:
+  https://www.youtube.com/watch?v=l0ZynfcKPm0. Repo: https://github.com/AshrafAhmed9/hesitate
+  (public). Live: https://hesitate-v2.onrender.com/call.html. All linked from README.md and the
+  HiDevs + Devpost submissions.
 - [ ] Claims match actual evidence; no unmeasured example numbers in submission copy.
 - [ ] Final adversarial review of the implementation, not merely this plan.
-- [ ] Submission completed on the correct platform(s), receipt retained.
+- [x] Submission completed on the correct platform(s), receipt retained. Submitted on HiDevs
+  (the platform of record for this hackathon) and, as a non-required extra, on Devpost. Both
+  confirmed submitted by Ashraf on 2026-09-20.
 - [ ] If Moss shortlisted, pitch and offline recording rehearsed; permitted changes verified.
 
 ## Current verdict
