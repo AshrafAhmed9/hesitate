@@ -7,6 +7,7 @@ the voice loop is built; every route here does something real.
 import os
 import sys
 import uuid
+from typing import Optional
 
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse, JSONResponse
@@ -64,9 +65,20 @@ def gate_demo():
 
 
 @app.get("/token")
-def get_token(room: str = "hesitate-demo"):
+def get_token(room: Optional[str] = None):
     """Issues a short-lived, room-scoped LiveKit token for the browser
-    client. PLAN.md section 3: the API secret never leaves the server."""
+    client. PLAN.md section 3: the API secret never leaves the server.
+
+    REAL BUG (2026-09-20): a fixed default room name ('hesitate-demo')
+    meant every test session -- synthetic caller, browser calls, manual
+    `connect --room` runs, all day -- reused the same room. After enough
+    forceful worker restarts, LiveKit's automatic-dispatch record for
+    that specific room got stuck referencing a dead worker process, so a
+    freshly restarted worker registered fine but never received a job
+    for that room -- the browser call connected but nothing happened,
+    with no error surfaced anywhere. A fresh, unique room name per call
+    sidesteps the whole class of problem: no stale dispatch to inherit."""
+    room = room or f"hesitate-call-{uuid.uuid4().hex[:8]}"
     try:
         from agent.voice.token import issue_room_token
     except Exception as e:
