@@ -55,6 +55,42 @@ class _SilentChunkedStream(tts_base.ChunkedStream):
         output_emitter.end_input()
 
 
+class _SilentSynthesizeStream(tts_base.SynthesizeStream):
+    """Streaming counterpart to _SilentChunkedStream.
+
+    REAL BUG (2026-09-20, found live during video recording): AgentSession's
+    default Agent.tts_node calls wrapped_tts.stream() directly -- not
+    synthesize() -- so the NotImplementedError GuardedTTS.stream() used to
+    raise on purpose fired on every real call, and the caller heard
+    nothing. push_text()/flush()/end_input() feed self._input_ch; this
+    drains it, then emits one short silent frame exactly like the
+    non-streaming dev path."""
+
+    async def _run(self, output_emitter) -> None:
+        pushed_text = ""
+        async for item in self._input_ch:
+            if isinstance(item, str):
+                pushed_text += item
+            else:  # _FlushSentinel
+                break
+
+        num_channels = self._tts.num_channels
+        sample_rate = self._tts.sample_rate
+        duration_s = 0.3
+        num_samples = int(sample_rate * duration_s)
+        silence = b"\x00\x00" * num_samples * num_channels
+
+        output_emitter.initialize(
+            request_id=str(id(self)),
+            sample_rate=sample_rate,
+            num_channels=num_channels,
+            mime_type="audio/pcm",
+        )
+        print(f"[GuardedTTS dev-stub, 0 chars spent] would speak: {pushed_text!r}")
+        output_emitter.push(silence)
+        output_emitter.flush()
+
+
 class GuardedTTS(tts_base.TTS):
     """Drop-in replacement for a real TTS plugin. Reads HESITATE_TTS_MODE
     from the environment (default 'dev') so a live LiveKit room test never
@@ -78,9 +114,4 @@ class GuardedTTS(tts_base.TTS):
     def stream(self, *, conn_options: APIConnectOptions = DEFAULT_API_CONNECT_OPTIONS):
         if self._mode == TTSMode.LIVE:
             return self._real_tts.stream(conn_options=conn_options)
-        raise NotImplementedError(
-            "GuardedTTS.stream() dev-mode path not implemented -- HesitateAgent's tts_node "
-            "override currently drives synthesis via synthesize()-per-sentence, not the "
-            "streaming .stream() API, so this has not been exercised. If AgentSession calls "
-            ".stream() directly, this will raise loudly rather than silently spending quota."
-        )
+        return _SilentSynthesizeStream(tts=self, conn_options=conn_options)
