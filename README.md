@@ -1,42 +1,70 @@
 # Hesitate
 
-A clinic voice agent that checks its own facts before it says them out loud.
+A clinic voice agent that checks each sentence against the clinic's current policy before it says it.
 
-The problem: a voice agent can be handed the right documents and still say the wrong thing.
-Standard retrieval grounds what the model reads, not what it says — so if an old prep sheet is
-still sitting in the search index next to the current one, the model can happily repeat the stale
-number with total confidence. Hesitate catches that before it reaches the caller's ears, not after.
+In 2024 a Canadian tribunal held Air Canada responsible for what its website chatbot told a
+customer about refunds ([Moffatt v. Air Canada](https://www.canlii.org/en/bc/bccrt/doc/2024/2024bccrt149/2024bccrt149.html)).
+Voice agents now answer patients the same way, and search alone doesn't prevent it: if an old prep
+sheet is still in the index next to the current one, the model can repeat the old number with full
+confidence. Hesitate stops that sentence before it reaches the caller's ears.
+
 Built for the YC Fall 2026 × Moss: The Zero Latency Builder Sprint.
 
-`PLAN.md` has the full spec this repo implements. `COMPETITION.md` is the running log of what's
-actually built and proven versus what's still aspirational — including the mistakes found along
-the way and how they got fixed.
-
 **Demo video:** https://www.youtube.com/watch?v=l0ZynfcKPm0
-**Live:** https://hesitate-v2.onrender.com/call.html
+**Live page:** https://hesitate-v2.onrender.com/call.html (needs the voice worker running; see below)
 
-## What it actually does
+## The number
 
-Every sentence the agent is about to speak gets checked against the clinic's current policy before
-it hits text-to-speech. If the sentence matches policy, it's spoken as-is. If it contradicts
-policy — say, the model says "fast for 12 hours" but the clinic's real answer is 8 — the wrong
-sentence is thrown out and replaced with a correction pulled straight from the real record, not
-from asking the model to try again. If there's nothing on record to check the claim against, the
-agent says it doesn't know rather than guessing.
+Twenty real questions, real Moss search, real Groq model, expected answers written down before the
+run (`bench/run_live_ab.py`, results in `bench/results/live_ab.json`):
 
-Moss is what makes this possible in practice: the lookup happens in-process in single-digit
-milliseconds, so the check can sit inside a live phone call without the conversation stalling out
-waiting for it.
+| | Wrong facts that reached the caller | Correct answers wrongly blocked |
+|---|---|---|
+| Ordinary retrieval agent | 6 of 20 | n/a |
+| Same agent with Hesitate | 0 of 20 | 0 of 20 |
 
-## What's real right now
+Moss lookup takes about 7 ms at the median. The check itself takes under a millisecond at the
+median (about 12 ms worst case). The six wrong answers all come from the same place: the old
+12-hour fasting sheet, which Moss ranks first for fasting questions.
 
-- Live and working: `/gate/demo` runs the actual verification logic, `/token` issues real LiveKit
-  room tokens, `/call.html` is a real browser client you can talk to.
-- The whole pipeline has run live, end to end, with a real person talking into a real microphone:
-  speech in, a checked (and sometimes corrected) reply out.
-- Everything behind it is a real account, not a mock: Moss, LiveKit, Deepgram, Groq, ElevenLabs.
-- The agent's voice worker currently runs from a local machine rather than the free-tier deployment
-  — the reasoning is written up honestly in `COMPETITION.md` instead of hidden.
+This is 20 questions on a small clinic corpus, not a claim about every deployment. The gaps we
+know about are in `docs/FAILURE_TAXONOMY.md`.
+
+## How a call works
+
+1. The caller asks a question (voice, or typed into the call page).
+2. Moss returns the three most relevant policy passages, in about 7 ms. The model answers from them.
+3. Each sentence the model writes is checked against the policy record for that fact, before it
+   goes to text-to-speech. Matches are spoken. Contradictions are replaced with a correction built
+   from the current record. Anything with nothing on record becomes "I'll check with the front desk."
+4. The call page shows all of it: what Moss found, the model's draft (struck out if it was wrong),
+   what was actually spoken, and the time each step took.
+
+The call page has a switch to turn protection off. With it off, the same agent with the same
+search results says "12 hours" out loud. That's the baseline the number above is measured against.
+
+The **policy desk** on the call page (demo machine only) shows the check isn't hardcoded. Publish a
+new fasting time and the next answer follows it, because the new record explicitly replaces the
+old one. Drop in an unapproved document saying "16 hours": Moss finds it and the model repeats it,
+but no approved record backs it, so the caller still hears the real policy.
+
+## What's real
+
+- Moss, LiveKit, Deepgram, Groq and ElevenLabs are all real accounts, not mocks.
+- The whole loop has been run live with a real microphone.
+- The voice worker runs from a local machine, not on Render. It crash-looped on the free tier on
+  every attempt; the write-up is in `COMPETITION.md`.
+- Not covered: claims with no number in them ("you'll get a text"), and vocabulary from outside the
+  clinic domain. Both are listed with their causes in `docs/FAILURE_TAXONOMY.md`.
+
+## Run the demo
+
+```bash
+bash scripts/demo.sh            # real ElevenLabs voice; SILENT=1 for silent dev mode
+```
+
+That restarts the worker, starts the web server on port 8000, resets the policy desk and opens
+`http://localhost:8000/call.html`.
 
 ## Setup
 
