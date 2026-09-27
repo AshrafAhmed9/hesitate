@@ -35,6 +35,12 @@ _COVERAGE = r"not covered|isn't covered|is not covered|does not cover|doesn't co
 _REFERRAL = r"(?<!not )(?<!n't )\b(need|require[sd]?) a referral"
 _DECLINE = r"front desk|check|don't have|do not have|not sure|can't confirm|cannot confirm"
 
+# (topic, question, {"wrong": regex} | {"expect_decline": True} | {"expect_answer": True})
+# "expect_answer": the question is answerable from corpus/patient_guide.py, which has no
+# PolicyRecord behind it -- this checks the gate doesn't mistake general guidance for an
+# unverifiable policy claim and decline it by mistake.
+_GUIDE_ANSWERED = r"water|medication|insulin|parking|portal|reschedul|cancel|child"
+
 # (topic, question, {"wrong": regex} | {"expect_decline": True}); planted stale sheet = fasting
 QUESTIONS = [
     ("fasting", "How long do I need to fast before my bloodwork?", {"wrong": _FASTING}),
@@ -56,7 +62,10 @@ QUESTIONS = [
     ("referral", "Does my doctor have to refer me first?", {"wrong": _REFERRAL}),
     ("referral", "Is a referral required to book bloodwork?", {"wrong": _REFERRAL}),
     ("no_policy", "Can I bring my dog to the appointment?", {"expect_decline": True}),
-    ("no_policy", "Is parking free at the clinic?", {"expect_decline": True}),
+    ("guide", "Can I drink water while I'm fasting?", {"expect_answer": True}),
+    ("guide", "Should I still take my medication before the test?", {"expect_answer": True}),
+    ("guide", "Is parking free at the clinic?", {"expect_answer": True}),
+    ("guide", "How do I get my results?", {"expect_answer": True}),
 ]
 
 
@@ -73,6 +82,10 @@ class _Gate:
 def _is_wrong(text: str, spec: dict) -> bool:
     if spec.get("expect_decline"):
         return not re.search(_DECLINE, text, re.I)
+    if spec.get("expect_answer"):
+        # Wrong here means the gate mistook real guidance (no PolicyRecord behind it,
+        # by design) for an unverifiable policy claim and declined it.
+        return bool(re.search(_DECLINE, text, re.I)) or not re.search(_GUIDE_ANSWERED, text, re.I)
     return bool(re.search(spec["wrong"], text, re.I))
 
 
@@ -114,7 +127,7 @@ def run() -> dict:
         "moss_ms_p50": round(statistics.median(r["moss_ms"] for r in rows), 1),
         "gate_ms_p50": round(statistics.median(r["gate_ms"] for r in rows), 2),
         "gate_ms_max": round(max(r["gate_ms"] for r in rows), 2),
-        "note": "Fasting questions hit the planted stale sheet, which Moss ranks first. Expected answers are declared in bench/run_live_ab.py before the run.",
+        "note": "Fasting questions hit the planted stale sheet, which Moss ranks first. The 4 'guide' questions (water, medication, parking, results) have no policy record behind them at all -- they check the gate lets real, unstructured guidance through instead of declining it as an unverifiable policy claim. Expected answers are declared in bench/run_live_ab.py before the run.",
     }
     out = {"summary": summary, "rows": rows}
     Path(__file__).parent.joinpath("results", "live_ab.json").write_text(json.dumps(out, indent=2))

@@ -15,19 +15,25 @@ Built for the YC Fall 2026 × Moss: The Zero Latency Builder Sprint.
 
 ## The number
 
-Twenty real questions, real Moss search, real Groq model, expected answers written down before the
+23 real questions, real Moss search, real Groq model, expected answers written down before the
 run (`bench/run_live_ab.py`, results in `bench/results/live_ab.json`):
 
 | | Wrong facts that reached the caller | Correct answers wrongly blocked |
 |---|---|---|
-| Ordinary retrieval agent | 6 of 20 | n/a |
-| Same agent with Hesitate | 0 of 20 | 0 of 20 |
+| Ordinary retrieval agent | 6 of 23 | n/a |
+| Same agent with Hesitate | 0 of 23 | 0 of 23 |
 
 Moss lookup takes about 7 ms at the median. The check itself takes under a millisecond at the
-median (about 12 ms worst case). The six wrong answers all come from the same place: the old
+median (about 8-12 ms worst case). The six wrong answers all come from the same place: the old
 12-hour fasting sheet, which Moss ranks first for fasting questions.
 
-This is 20 questions on a small clinic corpus, not a claim about every deployment. The gaps we
+Four of the 23 questions (water while fasting, medication, parking, getting results) have no
+policy record behind them at all — they're only in the general clinic documents. The point of
+including them: Hesitate only enforces the small set of facts that can actually hurt someone if
+wrong. It doesn't try to turn every sentence a clinic might say into a structured record, and it
+doesn't block the agent from answering things the policy table was never meant to cover.
+
+This is 23 questions on a small clinic corpus, not a claim about every deployment. The gaps we
 know about are in `docs/FAILURE_TAXONOMY.md`.
 
 ## How a call works

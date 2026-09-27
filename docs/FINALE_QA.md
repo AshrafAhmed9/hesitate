@@ -19,6 +19,25 @@ Retrieval decides what the model reads. It doesn't control what the model says. 
 the stale 12-hour sheet ranked first, the model repeated it, and 6 of 20 answers were wrong.
 Same model, same search results, gate off.
 
+**If a clean policy table exists, why not just have Moss search that instead of the messy documents?**
+Because the table only covers the handful of facts that hurt someone if they're wrong — six of
+them here. Patients ask far more than that: can I drink water, should I take my medication, is
+parking free, how do I get my results. None of that belongs in a structured record; nobody is
+going to turn every sentence a clinic might say into a database row. So the agent reads the
+clinic's real documents for everything, and the gate only steps in for the small set of facts on
+the table. `corpus/patient_guide.py` holds that general content, with no policy record behind it,
+and it's indexed alongside the policy docs (`scripts/build_moss_index.py`). Four questions in the
+live A/B are answerable only from it, precisely to prove the gate doesn't wrongly decline them.
+
+**What if the policy table itself is wrong or out of date?**
+Then the agent will confidently repeat the wrong fact, and it will even block the correct answer
+if the model happens to say the right thing. Nothing checks the checker — that's a real,
+permanent limit, not a hidden one. The honest claim isn't "this system knows the truth." It's that
+keeping one small table of ~30 facts correct, with an explicit "this replaces that" note on every
+change, is a far more tractable job than keeping every scattered document in a clinic's filing
+system correct. Same pattern as any company keeping one canonical pricing table while its
+marketing pages and old PDFs stay messy.
+
 **What does it miss?**
 Claims with no number or typed slot ("you'll get a text message"), and other domains' vocabulary
 (the insurance corpus exposed this). They're in `docs/FAILURE_TAXONOMY.md` with causes. The design
