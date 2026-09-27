@@ -1,6 +1,7 @@
 """
-LLM reply generation via Groq (openai/gpt-oss-20b), chosen for this
-project because Ashraf does not have an OpenAI/Anthropic key.
+LLM reply generation via Groq (openai/gpt-oss-20b), part of this
+hackathon's specified sponsor stack (Moss + LiveKit + Deepgram + Groq +
+ElevenLabs).
 
 MEASURED FINDING, not asserted: gpt-oss-20b is a reasoning model that by
 default spends completion tokens on a hidden `reasoning` field before

@@ -27,8 +27,8 @@ Use the more explicit 23:59 deadline in the rules rather than relying on the ove
   ElevenLabs plan before heavy voice-loop testing starts, or move dev/rehearsal TTS onto a
   free/local alternative and reserve the ElevenLabs quota for the final recorded demo + live
   finale only. Not yet decided — flagging now, before the budget is silently spent on iteration.
-- LLM: Groq (`openai/gpt-oss-20b`), key verified live. Ashraf has no OpenAI/Anthropic key; Groq is
-  the deliberate substitute, and it works.
+- LLM: Groq (`openai/gpt-oss-20b`), key verified live — part of this hackathon's specified sponsor
+  stack (Moss + LiveKit + Deepgram + Groq + ElevenLabs).
 
 **THE full loop ran live for the first time (see `tests/test_end_to_end_live.py`)**: real Moss
 retrieval returns the stale prep sheet as top-1 for "how long do I need to fast?" → real Groq LLM
