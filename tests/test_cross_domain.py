@@ -43,5 +43,5 @@ def test_conditional_claims_currently_fail_to_resolve():
         assert decision.value == expected, (
             f"expected the DOCUMENTED gap behavior ({expected}) for {sentence!r}; "
             f"got {decision.value} -- if this now passes correctly, update this test "
-            f"to assert the correct behavior and close the finding in COMPETITION.md"
+            f"to assert the correct behavior and close the finding in docs/BUILD_LOG.md"
         )

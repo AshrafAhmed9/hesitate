@@ -107,5 +107,5 @@ def _values_equal(claim: Claim, record: PolicyRecord) -> bool:
 # that reach this stub because no typed parser covers them currently
 # return UNVERIFIABLE via the caller's routing logic (agent/gate/verify.py),
 # which is a safe default but is NOT the completed semantic route the plan
-# specifies. This gap is recorded in COMPETITION.md's claims ledger, not
+# specifies. This gap is recorded in docs/BUILD_LOG.md's claims ledger, not
 # hidden here.

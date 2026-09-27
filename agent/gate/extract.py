@@ -157,4 +157,4 @@ def extract_claims(text: str, site: str = "*", service: str = "fasting-bloodwork
 # (section 9's added families); model-assisted decomposition into
 # AtomicClaim with subject/predicate/quantifier/modality (section 10,
 # "Claim representation and routing"); completeness checking against the
-# original sentence. Recorded in COMPETITION.md, not hidden.
+# original sentence. Recorded in docs/BUILD_LOG.md, not hidden.

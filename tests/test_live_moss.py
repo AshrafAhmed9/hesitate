@@ -52,7 +52,7 @@ def test_stale_document_genuinely_outranks_current_on_real_moss(live_client):
     assert "prep_current.txt" in by_id, "resolution needs the current doc to also be a candidate"
     # Documenting the actual measured ranking, not asserting our preference:
     # if this ever flips (current outranks stale), that's a real change in
-    # Moss's ranking behavior worth noting in COMPETITION.md, not a test to
+    # Moss's ranking behavior worth noting in docs/BUILD_LOG.md, not a test to
     # silently adjust.
     print(f"\nstale score={by_id['prep_stale.txt'].score:.4f}  current score={by_id['prep_current.txt'].score:.4f}")
 

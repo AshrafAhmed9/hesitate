@@ -6,7 +6,7 @@ STATUS: this is a starter set (not yet the full 200-case suite with
 100/100 dev/holdout split and independent human review) exercising every
 decision category the contract requires: SUPPORTED, CONTRADICTED,
 UNVERIFIABLE, and CONFLICT. Expanding to the full suite is tracked in
-COMPETITION.md, not silently substituted here as if it were complete.
+docs/BUILD_LOG.md, not silently substituted here as if it were complete.
 
 Each case: (sentence, candidate_records, expected_decision, expected_disposition)
 """

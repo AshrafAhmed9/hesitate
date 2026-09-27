@@ -89,7 +89,7 @@ def build_session(vad=None) -> AgentSession:
     mode) lives in agent/voice/tts.py and is NOT yet wired into this
     AgentSession path -- the LiveKit plugin calls ElevenLabs directly. Using
     this entrypoint against a real room WILL spend the reserved ElevenLabs
-    quota; that wiring gap is tracked in COMPETITION.md, not hidden."""
+    quota; that wiring gap is tracked in docs/BUILD_LOG.md, not hidden."""
     return AgentSession(
         stt=deepgram.STT(model="nova-3", api_key=os.environ["DEEPGRAM_API_KEY"]),
         # REAL FINDING: without VAD, AgentSession never detected the end of
@@ -191,7 +191,7 @@ if __name__ == "__main__":
     # Ashraf's decision, this worker is NOT deployed on Render for the
     # free tier -- it is run from a local machine (`python -m
     # agent.voice.entrypoint start`) for demos and the live finale,
-    # documented as an accepted limitation in COMPETITION.md rather than
+    # documented as an accepted limitation in docs/BUILD_LOG.md rather than
     # papered over. The deployed web service (call.html, /token,
     # /gate/*) stays on Render regardless.
     cli.run_app(WorkerOptions(entrypoint_fnc=entrypoint, prewarm_fnc=prewarm, load_threshold=1.5))
