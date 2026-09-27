@@ -20,7 +20,10 @@ def test_generate_reply_returns_nonempty_content():
         "How long do I need to fast before my bloodwork?",
     )
     assert r["text"]
-    assert r["reasoning_tokens"] < 20, "reasoning_effort=low should keep reasoning tokens minimal"
+    # reasoning_effort='low' measured at 6 reasoning tokens (groq_client.py docstring)
+    # vs 121 at default effort -- 30 gives headroom for live-call variance while still
+    # catching a real regression back toward default effort's much larger token count.
+    assert r["reasoning_tokens"] < 30, "reasoning_effort=low should keep reasoning tokens minimal"
 
 
 def test_latency_under_measured_baseline():
