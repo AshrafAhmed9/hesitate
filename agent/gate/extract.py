@@ -23,8 +23,39 @@ from .schema import Claim, Polarity
 _NUMBER_WORDS = {
     "zero": 0, "one": 1, "two": 2, "three": 3, "four": 4, "five": 5,
     "six": 6, "seven": 7, "eight": 8, "nine": 9, "ten": 10,
-    "eleven": 11, "twelve": 12, "twenty-four": 24, "twenty four": 24,
+    "eleven": 11, "twelve": 12, "thirteen": 13, "fourteen": 14, "fifteen": 15,
+    "sixteen": 16, "eighteen": 18, "twenty": 20, "twenty-four": 24, "twenty four": 24,
+    "thirty": 30, "forty": 40, "forty-five": 45, "fifty": 50, "sixty": 60,
+    "seventy-five": 75, "ninety": 90,
 }
+
+_WORD_NUM = "|".join(sorted((re.escape(w) for w in _NUMBER_WORDS), key=len, reverse=True))
+
+
+def _spell_out_to_digits(text: str) -> str:
+    """Rewrites spoken quantities ('half an hour', 'a day', 'two hundred
+    dollars') into the digit forms the patterns below understand. Found by
+    probing the gate with phrasings a caller or judge would plausibly use:
+    these produced zero claims, so a wrong answer passed as 'nothing to check'."""
+    arrive = r"((?:arrive|come in|check in|get there|be there|show up)\s+)"
+    fast = r"(\bfast(?:ing)?\s+(?:for\s+)?(?:about\s+|around\s+)?)"
+    # Only inside an arrival or fasting phrase: 'an hour before your visit' in an
+    # unrelated sentence (a text confirmation, say) must keep passing through.
+    text = re.sub(arrive + r"(?:half an? hour|half-hour)\b", r"\g<1>30 minutes", text, flags=re.IGNORECASE)
+    text = re.sub(arrive + r"(?:an|a|one) hour\b", r"\g<1>1 hour", text, flags=re.IGNORECASE)
+    text = re.sub(fast + r"half a day\b", r"\g<1>12 hours", text, flags=re.IGNORECASE)
+    text = re.sub(fast + r"(?:a|one)(?: full)? day\b", r"\g<1>24 hours", text, flags=re.IGNORECASE)
+    text = re.sub(
+        rf"\b({_WORD_NUM})\s+hundred(?:\s+(?:and\s+)?({_WORD_NUM}))?\s+(?:us\s+)?dollars?\b",
+        lambda m: f"${_NUMBER_WORDS[m.group(1).lower()] * 100 + (_NUMBER_WORDS[m.group(2).lower()] if m.group(2) else 0):g}",
+        text, flags=re.IGNORECASE,
+    )
+    text = re.sub(
+        rf"\b({_WORD_NUM})\s+(?:us\s+)?dollars?\b",
+        lambda m: f"${_NUMBER_WORDS[m.group(1).lower()]:g}", text, flags=re.IGNORECASE,
+    )
+    text = re.sub(r"\b(\d+(?:\.\d{1,2})?)\s+(?:us\s+)?dollars?\b", r"$\1", text, flags=re.IGNORECASE)
+    return text
 
 
 def _to_number(text: str) -> Optional[float]:
@@ -35,6 +66,13 @@ def _to_number(text: str) -> Optional[float]:
         return float(text)
     except ValueError:
         return None
+
+
+def normalize_text(text: str) -> str:
+    """Markdown stripped and spoken quantities written as digits. verify.py runs
+    both extraction and the completeness check on this form, so a correct
+    '150 dollars' is not flagged as an unrecognized dollar span."""
+    return _spell_out_to_digits(re.sub(r"[*_`]+", "", text))
 
 
 def extract_claims(text: str, site: str = "*", service: str = "fasting-bloodwork") -> list[Claim]:
@@ -51,7 +89,7 @@ def extract_claims(text: str, site: str = "*", service: str = "fasting-bloodwork
     check" instead of catching it. Stripping markdown emphasis before
     extraction fixes this generally, for every claim family, instead of
     patching each regex individually."""
-    text = re.sub(r"[*_`]+", "", text)
+    text = normalize_text(text)
     claims: list[Claim] = []
 
     for m in re.finditer(
@@ -64,7 +102,7 @@ def extract_claims(text: str, site: str = "*", service: str = "fasting-bloodwork
             claims.append(Claim(site, service, "fasting_duration", str(num), unit, Polarity.POSITIVE, (), m.group(0)))
 
     for m in re.finditer(
-        r"\b(?:arrive|come in|check in)\s+(?P<num>[\w-]+(?:\s\w+)?)\s*(?P<unit>hours?|hrs?|minutes?|mins?)\s*(?:early|before)\b",
+        r"\b(?:arrive|come in|check in|get there|be there|show up)\s+(?P<num>[\w-]+(?:\s\w+)?)\s*(?P<unit>hours?|hrs?|minutes?|mins?)\s*(?:early|before)\b",
         text, re.IGNORECASE,
     ):
         num = _to_number(m.group("num"))
@@ -88,6 +126,20 @@ def extract_claims(text: str, site: str = "*", service: str = "fasting-bloodwork
     ):
         doc = m.group("doc").lower().replace(" ", "_")
         claims.append(Claim(site, service, f"requires_{doc}", "true", None, Polarity.POSITIVE, (), m.group(0)))
+    for m in re.finditer(
+        r"(?<!\bno )(?<!\bnot )\b(?:an?\s+|your\s+)?(?P<doc>referral|id|insurance card|photo id|prescription)\s+(?:is|are)\s+(?:required|needed)\b",
+        text, re.IGNORECASE,
+    ):
+        doc = m.group("doc").lower().replace(" ", "_")
+        claims.append(Claim(site, service, f"requires_{doc}", "true", None, Polarity.POSITIVE, (), m.group(0)))
+    for m in re.finditer(
+        r"\b(?:an?\s+|your\s+)?(?P<doc>referral|id|insurance card|photo id|prescription)\s+(?:is|are)\s+(?:not|n't)\s+(?:required|needed)\b"
+        r"|\b(?P<doc2>referral|id|insurance card|photo id|prescription)\s+isn't\s+(?:required|needed)\b"
+        r"|\bno\s+(?P<doc3>referral|id|insurance card|photo id|prescription)\s+(?:is\s+)?(?:required|needed)\b",
+        text, re.IGNORECASE,
+    ):
+        doc = (m.group("doc") or m.group("doc2") or m.group("doc3")).lower().replace(" ", "_")
+        claims.append(Claim(site, service, f"requires_{doc}", "true", None, Polarity.NEGATIVE, (), m.group(0)))
     for m in re.finditer(
         r"\b(?:do not|don't|won't)\s+need\s+(?:a\s+|your\s+)?(?P<doc>referral|id|insurance card|photo id|prescription)\b",
         text, re.IGNORECASE,

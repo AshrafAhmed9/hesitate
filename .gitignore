@@ -7,3 +7,4 @@ node_modules/
 
 # venv holds sentence-transformers/torch weights, not needed in git
 .venv/
+corpus/published.json

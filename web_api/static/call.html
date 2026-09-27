@@ -176,6 +176,15 @@
     line-height: 1.5;
   }
   audio { display: none; }
+  .desk { margin-top:20px; border:1px solid var(--border); border-radius:10px; padding:14px 16px; background:var(--surface); }
+  .desk h2 { margin:0 0 4px; font-size:0.72rem; letter-spacing:0.06em; text-transform:uppercase; color:var(--text-dim); }
+  .desk p { margin:0 0 10px; font-size:0.85rem; color:var(--text-dim); line-height:1.5; }
+  .desk .line { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px; }
+  .desk input, .desk select { font:inherit; padding:8px 10px; border-radius:8px; border:1px solid var(--border); background:var(--bg); color:var(--text); min-width:0; }
+  .desk input[type=text] { flex:1 1 220px; }
+  .desk input[type=number] { width:90px; }
+  .desk .status { font-size:0.85rem; min-height:1.2em; }
+  .hit.unapproved span:first-child::after { content:" — not an approved policy"; color:var(--danger); font-family:inherit; }
   .proof { margin-top:20px; border:1px solid var(--border); border-radius:10px; padding:14px 16px; background:var(--surface); }
   .proof h2 { margin:0 0 8px; font-size:0.72rem; letter-spacing:0.06em; text-transform:uppercase; color:var(--text-dim); }
   .proof .big { font-size:1.15rem; font-weight:650; line-height:1.4; }
@@ -240,6 +249,22 @@
     <div id="log" aria-live="polite"></div>
   </div>
 
+  <section class="desk" id="desk" hidden aria-label="Policy desk">
+    <h2>Policy desk</h2>
+    <p>Change what the clinic's policy says, then ask again. Approved changes replace the current rule. An unapproved document goes into the search index but is never treated as policy.</p>
+    <form class="line" id="desk-policy">
+      <select id="desk-attr" aria-label="Policy"><option value="fasting_duration">Fasting (hours)</option><option value="arrival_offset">Arrive early (minutes)</option><option value="cost">Visit cost ($)</option></select>
+      <input id="desk-value" type="number" min="1" step="1" value="10" aria-label="New value">
+      <button type="submit">Publish approved policy</button>
+    </form>
+    <form class="line" id="desk-poison">
+      <input id="desk-text" type="text" autocomplete="off" aria-label="Unapproved document" value="Patients must fast 16 hours before any blood test.">
+      <button type="submit">Drop unapproved document</button>
+    </form>
+    <div class="line"><button type="button" id="desk-reset">Reset to original policy</button></div>
+    <div class="status" id="desk-status" role="status"></div>
+  </section>
+
   <section class="proof" id="proof" hidden aria-label="Measured results"></section>
 
   <p class="note">
@@ -286,6 +311,28 @@
     logToggle.textContent = logVisible ? 'Hide technical log' : 'Show technical log';
   });
 
+  const deskEl = document.getElementById('desk');
+  const deskStatus = document.getElementById('desk-status');
+  async function deskCall(path, body, busyText) {
+    deskStatus.textContent = busyText;
+    try {
+      const r = await fetch(path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: body ? JSON.stringify(body) : undefined });
+      const d = await r.json();
+      if (!r.ok) throw new Error(typeof d.detail === 'string' ? d.detail : 'request failed');
+      deskStatus.textContent = 'Done. The agent picks this up within a couple of seconds — ask again.';
+    } catch (e) { deskStatus.textContent = 'Could not apply: ' + e.message; }
+  }
+  document.getElementById('desk-policy').addEventListener('submit', (e) => {
+    e.preventDefault();
+    deskCall('/policy', { attribute: document.getElementById('desk-attr').value, value: Number(document.getElementById('desk-value').value) }, 'Publishing and indexing in Moss…');
+  });
+  document.getElementById('desk-poison').addEventListener('submit', (e) => {
+    e.preventDefault();
+    deskCall('/poison', { text: document.getElementById('desk-text').value }, 'Indexing in Moss…');
+  });
+  document.getElementById('desk-reset').addEventListener('click', () => deskCall('/desk/reset', null, 'Resetting…'));
+  fetch('/desk').then((r) => { if (r.ok) deskEl.hidden = false; }).catch(() => {});
+
   fetch('/proof').then((r) => (r.ok ? r.json() : null)).then((d) => {
     if (!d) return;
     const m = d.summary;
@@ -327,7 +374,7 @@
       el.dataset.mossMs = ev.moss_ms;
       el.innerHTML = `<div class="row"><h3>Caller asked</h3>${esc(ev.caller)}</div>
         <div class="row"><h3>Moss found · ${ev.moss_ms} ms</h3>${ev.moss.map((h) =>
-          `<div class="hit"><span>${esc(h.id)}</span><span>${h.score}</span></div>`).join('') || 'nothing'}</div>
+          `<div class="hit${h.approved === false ? ' unapproved' : ''}"><span>${esc(h.id)}</span><span>${h.score}</span></div>`).join('') || 'nothing'}</div>
         <div class="sentences"></div>`;
     } else if (ev.t === 'sentence') {
       const box = el.querySelector('.sentences') || el;

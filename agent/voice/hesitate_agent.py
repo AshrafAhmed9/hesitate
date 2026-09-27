@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import os
 import re
 import time
 from typing import AsyncIterable, Optional
@@ -69,6 +70,8 @@ class HesitateAgent(Agent):
     ):
         super().__init__(*args, **kwargs)
         self._policy_records = policy_records
+        self._base_records = list(policy_records)
+        self._desk_mtime = None
         self._moss = moss_client
         self._index_name = index_name
         self._room = room
@@ -78,9 +81,28 @@ class HesitateAgent(Agent):
         self._turn_started = 0.0
         self._first_sentence_sent = False
 
+    async def sync_desk(self) -> None:
+        """Picks up Policy Desk edits (corpus/published.json). The web API has
+        already written the new documents to Moss; this reloads the local copy
+        of the index and rebuilds the record set the gate checks against."""
+        from corpus import desk
+
+        try:
+            mtime = os.path.getmtime(desk.PUBLISHED_PATH)
+        except FileNotFoundError:
+            mtime = None
+        if mtime == self._desk_mtime:
+            return
+        self._desk_mtime = mtime
+        self._policy_records, _ = desk.apply_entries(self._base_records, desk.load_entries())
+        if self._moss is not None:
+            await self._moss.load_index(self._index_name)
+        print(f"[hesitate] policy desk synced: {len(self._policy_records)} records")
+
     async def prepare_turn(self, caller_text: str) -> str:
         """Retrieve from Moss for this turn, remember the candidate records
         for the gate, publish the turn-start trace, return the prompt text."""
+        await self.sync_desk()
         self._turn_id += 1
         self._turn_started = time.perf_counter()
         self._first_sentence_sent = False
@@ -92,7 +114,12 @@ class HesitateAgent(Agent):
             t0 = time.perf_counter()
             result = await self._moss.query(self._index_name, caller_text, QueryOptions(top_k=3))
             moss_ms = (time.perf_counter() - t0) * 1000
-            hits = [{"id": d.id, "text": d.text, "score": round(d.score, 3)} for d in result.docs]
+            approved = {r.source_id for r in self._policy_records}
+            hits = [
+                {"id": d.id, "text": d.text, "score": round(d.score, 3),
+                 "approved": d.id.split("#")[0] in approved}
+                for d in result.docs
+            ]
             ids = {h["id"].split("#")[0] for h in hits}
             self._turn_candidates = [r for r in self._policy_records if r.source_id in ids]
         else:

@@ -51,6 +51,7 @@ Run with: python -m agent.voice.entrypoint dev   (LiveKit's own dev-mode CLI)
 """
 from __future__ import annotations
 
+import asyncio
 import os
 
 from dotenv import load_dotenv
@@ -119,6 +120,18 @@ async def entrypoint(ctx: JobContext):
         instructions=SYSTEM_PROMPT, policy_records=RECORDS, moss_client=moss,
         index_name=MOSS_INDEX, room=ctx.room, gate_enabled=gate_enabled,
     )
+
+    async def watch_desk():
+        # Reload happens in the background so the next question doesn't wait for it.
+        while True:
+            try:
+                await agent.sync_desk()
+            except Exception as e:
+                print(f"[hesitate] desk sync failed: {e!r}")
+            await asyncio.sleep(1)
+
+    desk_task = asyncio.create_task(watch_desk())
+    ctx.add_shutdown_callback(lambda: desk_task.cancel())
 
     async def text_input(sess, ev):
         # Typed questions take the same path as spoken ones: Moss first.

@@ -4,6 +4,7 @@ submission requirement has something real behind it from day one, rather
 than being built last. This will grow into the actual dashboard API as
 the voice loop is built; every route here does something real.
 """
+import asyncio
 import os
 import sys
 import uuid
@@ -12,6 +13,7 @@ from typing import Optional
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
+from pydantic import BaseModel, Field
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -91,6 +93,88 @@ def get_token(room: Optional[str] = None):
         "room": room,
         "identity": identity,
     }
+
+
+# Policy Desk: live policy edits for the demo. Off unless HESITATE_DESK=1, so the
+# public Render deployment cannot be used to rewrite anything.
+_desk_lock = asyncio.Lock()
+
+
+def _require_desk():
+    if os.environ.get("HESITATE_DESK") != "1":
+        raise HTTPException(status_code=404, detail="policy desk is only enabled on the demo machine")
+
+
+def _moss():
+    from moss import MossClient
+    return MossClient(os.environ["MOSS_PROJECT_ID"], os.environ["MOSS_PROJECT_KEY"])
+
+
+class PolicyChange(BaseModel):
+    attribute: str
+    value: float
+
+
+class PoisonDoc(BaseModel):
+    text: str = Field(min_length=3, max_length=300)
+
+
+@app.get("/desk")
+def desk_state():
+    _require_desk()
+    from corpus.desk import load_entries, POLICY_FIELDS
+    return {"entries": load_entries(), "attributes": sorted(POLICY_FIELDS)}
+
+
+@app.post("/policy")
+async def publish_policy(change: PolicyChange):
+    """An approved change: supersedes the current record and is indexed in Moss."""
+    _require_desk()
+    from corpus.desk import load_entries, save_entries, validate_policy, apply_entries
+    from corpus.policy_records import RECORDS
+    from datetime import datetime
+    from moss import DocumentInfo
+    try:
+        value = validate_policy(change.attribute, change.value)
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=str(e))
+    async with _desk_lock:
+        entries = load_entries()
+        entry = {"kind": "policy", "attribute": change.attribute, "value": value,
+                 "at": datetime.now().isoformat()}
+        _, docs = apply_entries(RECORDS, entries + [entry])
+        new_doc = docs[-1]
+        await _moss().add_docs("hesitate-clinic", [DocumentInfo(id=new_doc["id"], text=new_doc["text"])])
+        save_entries(entries + [entry])  # written last: the worker reloads Moss when this changes
+    return {"published": new_doc["text"], "moss_doc": new_doc["id"]}
+
+
+@app.post("/poison")
+async def drop_unapproved(doc: PoisonDoc):
+    """An unapproved document: Moss will retrieve it, but no policy record backs it."""
+    _require_desk()
+    from corpus.desk import load_entries, save_entries
+    from moss import DocumentInfo
+    async with _desk_lock:
+        entries = load_entries()
+        entry = {"kind": "poison", "text": doc.text.strip()}
+        doc_id = f"judge_upload_{len(entries) + 1}.txt#note"
+        await _moss().add_docs("hesitate-clinic", [DocumentInfo(id=doc_id, text=entry["text"])])
+        save_entries(entries + [entry])
+    return {"indexed": entry["text"], "moss_doc": doc_id}
+
+
+@app.post("/desk/reset")
+async def reset_desk():
+    _require_desk()
+    from corpus.desk import load_entries, save_entries, apply_entries
+    from corpus.policy_records import RECORDS
+    async with _desk_lock:
+        _, docs = apply_entries(RECORDS, load_entries())
+        if docs:
+            await _moss().delete_docs("hesitate-clinic", [d["id"] for d in docs])
+        save_entries([])
+    return {"reset": True, "removed": len(docs)}
 
 
 @app.get("/proof")

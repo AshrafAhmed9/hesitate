@@ -26,7 +26,7 @@ from typing import Optional
 
 from .completeness import find_unclassified_spans
 from .correct import DECLINE_TEXT, build_sentence_correction
-from .extract import extract_claims
+from .extract import extract_claims, normalize_text
 from .resolve import resolve_claim
 from .schema import (
     AtomicVerdict,
@@ -46,7 +46,7 @@ def verify_unit(
 ) -> GateDecision:
     t0 = time.perf_counter()
     claims = extract_claims(candidate.text)
-    unclassified = find_unclassified_spans(candidate.text, [c.raw_text for c in claims])
+    unclassified = find_unclassified_spans(normalize_text(candidate.text), [c.raw_text for c in claims])
     t1 = time.perf_counter()
 
     verdicts: list[AtomicVerdict] = []
