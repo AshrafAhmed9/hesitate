@@ -10,6 +10,9 @@ set -a; source .env; set +a
 pkill -f "[a]gent.voice.entrypoint" 2>/dev/null || true
 pkill -f "[u]vicorn web_api.main" 2>/dev/null || true
 sleep 1
+# A worker with a live call drains instead of exiting and keeps port 8081; force it.
+pkill -9 -f "[a]gent.voice.entrypoint" 2>/dev/null || true
+sleep 1
 
 [ "${SILENT:-0}" = "1" ] || export HESITATE_TTS_MODE=live
 

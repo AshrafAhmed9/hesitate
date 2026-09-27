@@ -93,9 +93,12 @@ class HesitateAgent(Agent):
             mtime = None
         if mtime == self._desk_mtime:
             return
+        first_sync = self._desk_mtime is None
         self._desk_mtime = mtime
         self._policy_records, _ = desk.apply_entries(self._base_records, desk.load_entries())
-        if self._moss is not None:
+        # The first sync happens at call start, when the index is already being
+        # loaded fresh; reloading it again only made the call slower to join.
+        if self._moss is not None and not first_sync:
             await self._moss.load_index(self._index_name)
         print(f"[hesitate] policy desk synced: {len(self._policy_records)} records")
 
@@ -110,6 +113,10 @@ class HesitateAgent(Agent):
         moss_ms = 0.0
         if self._moss is not None:
             from moss import QueryOptions
+
+            loading = getattr(self, "_moss_loading", None)
+            if loading is not None:
+                await loading
 
             t0 = time.perf_counter()
             result = await self._moss.query(self._index_name, caller_text, QueryOptions(top_k=3))

@@ -55,7 +55,7 @@ import asyncio
 import os
 
 from dotenv import load_dotenv
-from livekit.agents import AgentSession, JobContext, WorkerOptions, cli
+from livekit.agents import AgentSession, JobContext, JobProcess, WorkerOptions, cli
 from livekit.agents.voice.room_io import RoomInputOptions
 from moss import MossClient
 from livekit.plugins import deepgram, elevenlabs, groq as groq_plugin, silero
@@ -77,7 +77,12 @@ SYSTEM_PROMPT = (
 MOSS_INDEX = "hesitate-clinic"
 
 
-def build_session() -> AgentSession:
+def prewarm(proc: JobProcess) -> None:
+    # Loaded once per worker process before any call arrives, not on every join.
+    proc.userdata["vad"] = silero.VAD.load()
+
+
+def build_session(vad=None) -> AgentSession:
     """Real providers, matching the measured findings elsewhere in this repo:
     Groq's gpt-oss-20b with reasoning_effort='low' (agent/llm/groq_client.py),
     Deepgram nova-3 STT, ElevenLabs TTS. TTS quota discipline (dev vs live
@@ -92,7 +97,7 @@ def build_session() -> AgentSession:
         # fired -- confirmed by a live test with scripts/synthetic_caller.py
         # where the worker joined and closed the session on disconnect with
         # no transcript/turn activity in between. silero.VAD closes that gap.
-        vad=silero.VAD.load(),
+        vad=vad or silero.VAD.load(),
         llm=groq_plugin.LLM(
             model="openai/gpt-oss-20b",
             api_key=os.environ["GROQ_API_KEY"],
@@ -111,15 +116,19 @@ def build_session() -> AgentSession:
 
 async def entrypoint(ctx: JobContext):
     await ctx.connect()
-    session = build_session()
+    session = build_session(ctx.proc.userdata.get("vad"))
     moss = MossClient(os.environ["MOSS_PROJECT_ID"], os.environ["MOSS_PROJECT_KEY"])
-    await moss.load_index(MOSS_INDEX)
+    # Loading the index took ~5s per call over a hotspot and the agent couldn't
+    # join until it finished. Load it alongside the session start instead; the
+    # first question waits for it only if the caller asks within those seconds.
+    moss_loading = asyncio.create_task(moss.load_index(MOSS_INDEX))
     # Rooms named baseline-* run the same retrieval and prompt with the gate off.
     gate_enabled = not ctx.room.name.startswith("baseline-")
     agent = HesitateAgent(
         instructions=SYSTEM_PROMPT, policy_records=RECORDS, moss_client=moss,
         index_name=MOSS_INDEX, room=ctx.room, gate_enabled=gate_enabled,
     )
+    agent._moss_loading = moss_loading
 
     async def watch_desk():
         # Reload happens in the background so the next question doesn't wait for it.
@@ -185,4 +194,4 @@ if __name__ == "__main__":
     # documented as an accepted limitation in COMPETITION.md rather than
     # papered over. The deployed web service (call.html, /token,
     # /gate/*) stays on Render regardless.
-    cli.run_app(WorkerOptions(entrypoint_fnc=entrypoint, load_threshold=1.5))
+    cli.run_app(WorkerOptions(entrypoint_fnc=entrypoint, prewarm_fnc=prewarm, load_threshold=1.5))
