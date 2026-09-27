@@ -131,7 +131,16 @@ async def entrypoint(ctx: JobContext):
             await asyncio.sleep(1)
 
     desk_task = asyncio.create_task(watch_desk())
-    ctx.add_shutdown_callback(lambda: desk_task.cancel())
+
+    async def stop_desk_watch():
+        # REAL BUG (2026-09-27): a plain 'lambda: desk_task.cancel()' returns a
+        # bool, but add_shutdown_callback always awaits the callback -- this
+        # threw 'bool object can't be awaited' on EVERY hangup, live, caught
+        # while testing repeated calls. Left the desk-watch task's cleanup
+        # unconfirmed on every job shutdown.
+        desk_task.cancel()
+
+    ctx.add_shutdown_callback(stop_desk_watch)
 
     async def text_input(sess, ev):
         # Typed questions take the same path as spoken ones: Moss first.

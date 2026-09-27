@@ -13,8 +13,17 @@ sleep 1
 
 [ "${SILENT:-0}" = "1" ] || export HESITATE_TTS_MODE=live
 
-python -m agent.voice.entrypoint start > /tmp/hesitate_worker.log 2>&1 &
-HESITATE_DESK=1 uvicorn web_api.main:app --port 8000 > /tmp/hesitate_web.log 2>&1 &
+# REAL BUG (2026-09-27): a plain '&' leaves these in the launching shell's
+# process group. When this script is itself run in a backgrounded/tracked
+# shell (Claude Code's background Bash tool, some terminal wrappers), the
+# environment reaps that whole process group once THIS script exits --
+# killing the worker and web server a few seconds after "READY" printed,
+# mid-call, with no error. nohup + disown detaches them fully so they
+# outlive this script's own process.
+nohup python -m agent.voice.entrypoint start > /tmp/hesitate_worker.log 2>&1 &
+disown
+nohup env HESITATE_DESK=1 uvicorn web_api.main:app --port 8000 > /tmp/hesitate_web.log 2>&1 &
+disown
 
 echo "Waiting for the worker to register..."
 for _ in $(seq 1 60); do

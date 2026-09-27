@@ -143,20 +143,9 @@
     line-height: 1.5;
   }
   .error-box[data-visible="true"] { display: block; }
-  .log-toggle {
-    margin-top: 20px;
-    background: none;
-    border: none;
-    padding: 0;
-    font-size: 0.8rem;
-    color: var(--text-dim);
-    text-decoration: underline;
-    flex: none;
-    width: auto;
-  }
   #log {
-    display: none;
-    margin-top: 10px;
+    display: block;
+    margin-top: 20px;
     padding: 12px;
     background: var(--bg);
     border: 1px solid var(--border);
@@ -168,7 +157,6 @@
     max-height: 200px;
     overflow-y: auto;
   }
-  #log[data-visible="true"] { display: block; }
   .note {
     margin-top: 20px;
     font-size: 0.8rem;
@@ -243,9 +231,6 @@
     <div class="error-box" id="error-box" role="alert"></div>
     <div id="trace" aria-live="polite"></div>
 
-    <button class="log-toggle" id="log-toggle" type="button" aria-expanded="false" aria-controls="log">
-      Show technical log
-    </button>
     <div id="log" aria-live="polite"></div>
   </div>
 
@@ -280,9 +265,7 @@
   const hangupBtn = document.getElementById('hangup');
   const errorBox = document.getElementById('error-box');
   const logEl = document.getElementById('log');
-  const logToggle = document.getElementById('log-toggle');
   let room = null;
-  let logVisible = false;
 
   function setState(state, text) {
     statusDot.dataset.state = state;
@@ -303,13 +286,6 @@
     errorBox.dataset.visible = "false";
     errorBox.textContent = "";
   }
-
-  logToggle.addEventListener('click', () => {
-    logVisible = !logVisible;
-    logEl.dataset.visible = String(logVisible);
-    logToggle.setAttribute('aria-expanded', String(logVisible));
-    logToggle.textContent = logVisible ? 'Hide technical log' : 'Show technical log';
-  });
 
   const deskEl = document.getElementById('desk');
   const deskStatus = document.getElementById('desk-status');
