@@ -238,3 +238,13 @@ This matrix separates planned coverage from actual compliance. Sources: official
 | Additional submission form instructions/organizer updates | Check before final submission; do not infer absent constraints | Still to verify |
 
 Conclusion: published project requirements are covered by the plan. Full entry compliance cannot be certified until the pending participant, form, and actual-deliverable checks are completed. The unresolved event mismatch is no longer a concern.
+
+## Finale build (2026-09-27)
+
+- **Moss is in the live call.** Each turn queries the `hesitate-clinic` index (one document per policy sentence, top 3, about 7 ms) and the gate checks against the records those hits point to. The trace on the call page shows the hits, the draft, what was spoken and timings.
+- **Live A/B** (`bench/run_live_ab.py`, `bench/results/live_ab.json`): 20 questions, real Moss and Groq, expected answers declared before the run. Without the gate 6 wrong answers reached the caller; with it 0; 0 correct answers blocked. Moss p50 6.9 ms, gate p50 0.23 ms, gate max 12 ms.
+- **Mistake caught by that run:** after adding "a referral is required" phrasing to the extractor, the A/B flagged "No referral is needed" (correct) as wrong. Fixed with an explicit negative pattern; regression test added.
+- **Gaps closed by probing phrasings a judge might try:** "half a day", "one day", "half an hour", "an hour early", "two hundred dollars", "a referral is required". Before the fix each produced zero claims and passed through. Tests: `tests/test_adversarial_phrasings.py`. The rewrites are limited to fasting and arrival phrases so unrelated sentences still pass.
+- **Policy Desk** (`corpus/desk.py`, `/policy`, `/poison`, `/desk/reset`; enabled only with `HESITATE_DESK=1`): an approved change supersedes the current record and is added to Moss; an unapproved document is indexed but never becomes policy. Verified live: publish 10 hours, the model's stale 12 was corrected to 10; add a 16-hour document, the model said 16, the caller heard 10.
+- **Not yet done:** rehearsal counts from a real microphone (ON/OFF over 10 calls), architecture diagram and PRD refresh on HiDevs, the re-submit itself.
+- `tests/test_live_groq.py::test_latency_under_measured_baseline` is a live network latency check and can fail on a slow Groq response (1.3 s vs a 1 s bound on one run). It is not gate logic.
