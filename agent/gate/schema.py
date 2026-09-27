@@ -1,6 +1,6 @@
 """
 W0 Contracts — versioned policy fact and claim/decision schemas.
-PLAN.md section 4 ("Canonical policies", "Claims and decisions").
+the design spec section 4 ("Canonical policies", "Claims and decisions").
 
 This is the shared contract every other module (verification, ingestion,
 evaluation) imports. Do not duplicate these fields elsewhere.
@@ -19,7 +19,7 @@ class Polarity(str, Enum):
 
 
 class Decision(str, Enum):
-    """PLAN.md section 4 evidence table. Four outcomes, not three — CONFLICT
+    """the design spec section 4 evidence table. Four outcomes, not three — CONFLICT
     is distinct from UNVERIFIABLE: it means multiple applicable authorities
     disagree, not that evidence is missing."""
     SUPPORTED = "supported"
@@ -32,7 +32,7 @@ class Decision(str, Enum):
 class PolicyRecord:
     """A single curated, structured policy fact. Author these by hand (or
     generate then manually review) — this is not free-text auto-extraction.
-    PLAN.md section 4: 'canonical policies' are manually reviewed structured
+    the design spec section 4: 'canonical policies' are manually reviewed structured
     records; Moss retrieves natural-language passages, but the comparison
     key is always this structured record, not the passage text."""
     policy_id: str
@@ -87,7 +87,7 @@ class Claim:
 @dataclass(frozen=True)
 class AtomicClaim:
     """One decomposed proposition from a CandidateUnit. subject/predicate/
-    object mirror PLAN.md section 10's decomposition fields; site/service/
+    object mirror the design spec section 10's decomposition fields; site/service/
     attribute/value/unit/polarity/conditions carry the typed comparison key
     so this can flow directly into resolve_claim()."""
     subject: str

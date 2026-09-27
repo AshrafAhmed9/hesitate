@@ -1,78 +1,120 @@
-# PRD — Hesitate
+# Product Requirements Document (PRD): Hesitate
 
-Mandatory submission deliverable (PLAN.md section 23: "PRD should explain the problem, target users, solution, and key product requirements").
+## 1. Executive Summary
+**Hesitate** is a real-time voice agent for healthcare administrative intake. Standard
+retrieval-augmented (RAG) agents can confidently repeat outdated information. Hesitate adds a
+mandatory **Verification Gate** that intercepts every sentence the model generates and checks its
+factual claims against a live, versioned policy record, retrieved through **Moss**, before any audio
+is synthesized. Patients should never receive an incorrect instruction about fasting, arrival,
+insurance or cost.
 
-## Problem
+## 2. Problem Statement
+Clinic front-desk coordinators handle 60+ repetitive calls a day about administrative policy
+(fasting duration, arrival times, insurance coverage). Standard RAG agents fail in three ways:
+1. The model retrieves a stale document that was never removed from the index.
+2. The model ignores the retrieved context and asserts a hallucinated figure.
+3. The model picks one of two conflicting records by similarity rather than explicit supersession.
 
-A clinic front-desk voice agent answers administrative questions — fasting duration, arrival time,
-coverage, required documents, cost, appointment windows. When policy changes (a stale document
-still in the retrieval index, a superseded instruction sheet), a standard RAG agent can retrieve
-and repeat the wrong figure with full confidence, because retrieval grounds the model's *input*,
-not its *output*. Nothing stops the model from asserting a number the current policy contradicts.
+In healthcare, these errors lead to wasted appointments, patient frustration and administrative
+liability.
 
-## Target users
+## 3. Goals & Objectives
+* **No wrong facts delivered:** no factual claim contradicting current policy reaches the caller.
+* **Low latency:** verification overhead small enough for a live conversation.
+* **Live policy authority:** staff can update policy mid-call with immediate effect.
+* **Structural guarantee:** the gate is a hard boundary, not a best-effort check.
 
-- **Primary:** the clinic's front-desk coordinator, whose day includes 60+ repetitive calls about
-  the same eleven administrative questions, and who is accountable when a patient arrives having
-  gotten the wrong instruction.
-- **Secondary:** the clinic operator or voice-agent implementer deciding whether to trust an
-  agent with unsupervised administrative answers.
+## 4. Target Users / Stakeholders
+* **Primary:** clinic front-desk coordinators, accountable for patient instructions.
+* **Secondary:** clinic operators deciding whether an automated voice agent is safe to deploy.
+* **End user:** patients seeking accurate administrative information.
 
-**Validation status:** hypothesis, not yet confirmed with a real coordinator or operator. Per
-PLAN.md section 1, real conversations with clinic staff are called for in parallel with the build;
-none have occurred at the time of this document. This PRD does not claim customer validation it
-does not have.
+## 5. Functional Requirements
 
-## Solution
+### 5.1 Voice Interaction & Processing
+* **Real-time transcription:** caller speech to text with Deepgram STT.
+* **Streaming response:** sentence-by-sentence generation with Groq (gpt-oss-20b) so each sentence
+  can be verified before it is spoken.
+* **Verified speech synthesis:** only approved or corrected text reaches ElevenLabs TTS.
 
-Every factual clause in the agent's outgoing sentence is checked against a curated, versioned,
-structured policy record **before** it reaches text-to-speech. Four possible outcomes per claim,
-matching PLAN.md section 4's decision table exactly:
+### 5.2 The Verification Gate (Core Logic)
+Every candidate sentence gets one of four outcomes:
+1. **Supported:** the claim matches policy; the sentence is spoken as generated.
+2. **Contradicted:** the claim is wrong; the sentence is replaced with a template correction filled
+   only from the policy record's value.
+3. **Unverifiable:** no policy exists for the claim; the agent declines and refers the caller to the
+   front desk.
+4. **Conflict:** multiple current records disagree; the agent declines rather than picking one.
 
-| Outcome | What happens |
-|---|---|
-| Supported | The sentence is spoken as generated |
-| Contradicted | The sentence is corrected using a template populated only from the current policy record's own value — never the model's wrong number |
-| Unverifiable | The agent declines: "I can't confirm that from this clinic's policy. Please check with the front desk." |
-| Conflict | Multiple equally-applicable current records disagree with no supersession between them — same decline, because picking one by similarity is exactly the failure mode this product exists to prevent |
+* **Typed extraction:** routes for fasting duration, arrival offset, coverage, required documents,
+  cost and appointment windows.
+* **Untyped claims:** a separate, tested module using a local entailment model for claims not
+  covered by typed routes (not yet wired into the live call path).
 
-## Key product requirements (from PLAN.md, in priority order for the vertical slice)
+### 5.3 Policy Management (Policy Desk)
+* **Live updates:** publish approved policies or drop unapproved documents.
+* **Immediate sync:** uses the Moss SDK `add_docs` method; the next call uses the change.
 
-1. No candidate sentence bypasses the verification gate (structural guarantee — section 4).
-2. Corrections are built solely from validated policy records, never from unchecked model output
-   or from re-prompting the LLM (section 4).
-3. Supersession is explicit — never "latest upload" or highest retrieval similarity (section 4).
-   An unresolved conflict between equally-applicable current records is its own outcome, distinct
-   from "no evidence found."
-4. Every claim family originally scoped (fasting duration, arrival offset, coverage, required
-   documents, cost, appointment windows) is covered by the typed route; nonnumeric/untyped claims
-   route to a genuine local entailment model, not a similarity threshold (section 10).
-5. The gate's own latency is measured, not asserted (section 5) — typed-route p50/p95
-   sub-millisecond, semantic-route warm p50 ~7ms model-only, in-process, on real benchmark cases
-   defined in `bench/`. In the one live end-to-end run, the gate resolved a real Moss + real Groq
-   turn in 9.76ms.
+## 6. Non-Functional Requirements
+* **Latency:**
+  * Moss retrieval: ~6.6–7 ms median.
+  * Verification check: ~0.25 ms median, under 12 ms worst case.
+* **Reliability:** no sentence can bypass the gate.
+* **Resources:** the voice worker must accommodate VAD and streaming SDK memory needs.
 
-## What's proven since this PRD was first written (updated 2026-09-13)
+## 7. System Architecture Overview
+1. **Frontend:** vanilla HTML/JS client connects over WebRTC to LiveKit.
+2. **Voice agent worker (local):** runs Silero VAD, Deepgram STT, Groq LLM and ElevenLabs TTS, and
+   queries Moss on every turn.
+3. **Verification Gate:** sits between the LLM and TTS.
+4. **FastAPI backend (cloud):** issues tokens and hosts independent test endpoints.
+5. **Moss:** managed semantic retrieval over the clinic's documents.
 
-- **Deployed and live:** https://hesitate-v2.onrender.com
-- **The core premise is proven true against the real sponsor service:** real Moss retrieval,
-  queried against a real project, ranks a stale policy document above the current one for the
-  natural patient question (confirmed twice, live) — exactly the failure this product exists to
-  catch, not a constructed scenario.
-- **The full loop has run live, once, end to end:** real Moss retrieval → real Groq LLM → the gate
-  → a real correction, all real, nothing mocked (`tests/test_end_to_end_live.py`).
-- **A real production bug was found and fixed live:** a factual claim phrased as a vague range
-  ("fast for 8-12 hours") produced zero typed claims and silently passed as supported. A
-  completeness check now catches this class of gap.
-- **Reusability is demonstrated, not asserted:** the identical gate runs unmodified inside a second,
-  non-voice text agent (`examples/text_chat_agent.py`).
+## 8. Tech Stack
+* **Frontend:** vanilla HTML/JS, LiveKit JS SDK, WebRTC.
+* **Backend:** Python, FastAPI, Pydantic.
+* **LLM:** Groq (gpt-oss-20b).
+* **Knowledge base:** Moss (managed vector search / semantic retrieval).
+* **Verification model:** `cross-encoder/nli-deberta-v3-xsmall` via `sentence-transformers`.
+* **Voice services:** Deepgram (STT), ElevenLabs (TTS), Silero VAD.
+* **Deployment:** Render (web/API), local machine (voice worker).
 
-## What this PRD still does not claim
+## 9. Data Requirements
+* **Policy records:** structured, versioned records with explicit supersession.
+* **Claim extraction:** typed factual assertions.
+* **Context retrieval:** live retrieval from Moss on every call turn (~7 ms).
 
-**No customer interviews have happened yet** — still the single largest unvalidated assumption in
-this document. **No real human has joined a live call via browser and microphone and spoken to the
-agent** — the voice pipeline's individual pieces (LiveKit connection, Deepgram STT, silero VAD) are
-each confirmed live and working, but a real end-to-end voice turn has not been observed; a gap was
-found in a synthetic-audio test script (not the production path) and is tracked in
-`COMPETITION.md`, unresolved. No claim in this document substitutes for the evidence in
-`COMPETITION.md`'s ledger — that ledger, not this PRD, is the source of truth for what is proven.
+## 10. API Specifications
+* **`GET /gate/demo`:** runs the Verification Gate independently of the voice pipeline.
+* **`GET /gate/live-demo`:** runs the gate against real, live Moss retrieval.
+* **`GET /proof`:** serves the live A/B benchmark result.
+* **`GET /token`:** issues LiveKit room tokens.
+* **Moss SDK:** `query` for retrieval, `add_docs` for Policy Desk writes.
+
+## 11. Security Requirements
+* **Policy Desk access:** disabled on the public deployment; enabled only on the demo machine.
+* **Transport:** caller audio over secure WebRTC.
+* **Policy integrity:** explicit supersession, so only the current record is used for verification.
+
+## 12. Deployment & Infrastructure
+* **Web service:** FastAPI backend and frontend on **Render**.
+* **Voice agent worker:** runs on a **local machine**. Deepgram, ElevenLabs, Groq and Silero VAD
+  together exceed Render's free-tier memory.
+* **Orchestration:** single FastAPI service.
+
+## 13. Success Metrics
+* **Wrong facts delivered:** 0 of 23 in the declared live benchmark (6 of 23 without the gate).
+* **Correct answers wrongly blocked:** 0 of 23.
+* **Latency:** median check overhead under 1 ms, excluding retrieval.
+
+## 14. Timeline & Milestones
+* **Complete:** live proof of concept on Render; stale-document failure reproduced and caught; live
+  A/B benchmark; Policy Desk.
+* **Planned:** wire the untyped-claim entailment route into the live voice path.
+* **Planned:** interviews with clinic front-desk coordinators.
+
+## 15. Open Questions & Risks
+* **Local worker:** limits cloud-only deployment for now.
+* **Coverage gaps:** claims without numbers ("you'll get a text message") and vocabulary outside
+  the clinic domain are not yet covered (`docs/FAILURE_TAXONOMY.md`).
+* **Validation gap:** no customer interviews yet.

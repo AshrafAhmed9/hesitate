@@ -1,7 +1,7 @@
 """
 W1/W2 — canonical, manually curated PolicyRecord fixtures.
 
-PLAN.md section 4: "Author readable synthetic passages and manually
+the design spec section 4: "Author readable synthetic passages and manually
 reviewed structured records." These records are the actual authority the
 gate compares against; corpus/*.txt are the natural-language source
 documents Moss retrieves (source_span traces back to them). All fictional,
@@ -45,7 +45,7 @@ RECORDS = [
     # every claim to service="fasting-bloodwork", conditions=() (documented
     # gap in extract.py). These fixture records use that same default so
     # the typed comparison keys actually match; a real deployment resolves
-    # service/conditions from session state (PLAN.md section 4) rather
+    # service/conditions from session state (the design spec section 4) rather
     # than needing this workaround.
     PolicyRecord(
         policy_id="prep-coverage",

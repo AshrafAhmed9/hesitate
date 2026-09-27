@@ -69,7 +69,7 @@ def gate_demo():
 @app.get("/token")
 def get_token(room: Optional[str] = None):
     """Issues a short-lived, room-scoped LiveKit token for the browser
-    client. PLAN.md section 3: the API secret never leaves the server.
+    client. the design spec section 3: the API secret never leaves the server.
 
     REAL BUG (2026-09-20): a fixed default room name ('hesitate-demo')
     meant every test session -- synthetic caller, browser calls, manual

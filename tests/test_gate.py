@@ -1,5 +1,5 @@
 """
-PLAN.md section 14 verification requirement: 'pytest over the case suite
+the design spec section 14 verification requirement: 'pytest over the case suite
 with pre-declared expected verdicts; it must fail loudly when the support
 threshold is wrong.'
 """
@@ -34,7 +34,7 @@ def test_contradicted_never_releases_original_text():
 
 
 def test_gate_latency_budget():
-    """PLAN.md section 5 target: warm gate p95 <= 60ms. This is the typed
+    """the design spec section 5 target: warm gate p95 <= 60ms. This is the typed
     route only (no Moss network round-trip, no semantic/NLI route -- both
     out of scope of this measurement, see resolve.py status note)."""
     from corpus.policy_records import RECORDS

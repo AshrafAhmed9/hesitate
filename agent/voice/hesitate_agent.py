@@ -1,9 +1,9 @@
 """
-The actual sole-TTS-entry-point boundary (PLAN.md section 3/4).
+The actual sole-TTS-entry-point boundary (the design spec section 3/4).
 
 Overrides LiveKit Agent.tts_node -- the one point every generated
 sentence must pass through before becoming audio, including corrections
-(PLAN.md: "Every application speech path must use the boundary"). Buffers
+(the original design spec: "Every application speech path must use the boundary"). Buffers
 incoming text into sentences, runs each through the real verification
 gate, and passes only the approved/corrected/decline text onward to the
 real TTS synthesis (the default tts_node implementation via super()).
@@ -48,7 +48,7 @@ def policy_prompt(hits: list[dict]) -> str:
 
 
 class HesitateAgent(Agent):
-    """PLAN.md section 4's release rule, applied to every sentence the
+    """the design spec section 4's release rule, applied to every sentence the
     LLM produces, before any of it reaches audio.
 
     Live-call additions: each turn retrieves from Moss (moss_client, an async
@@ -158,7 +158,7 @@ class HesitateAgent(Agent):
 
     async def _verify_and_replace(self, text: AsyncIterable[str]) -> AsyncIterable[str]:
         """Buffers the incoming token stream into sentences (bounded by
-        sentence-ending punctuation; PLAN.md section 4 'Stream lifecycle'),
+        sentence-ending punctuation; the design spec section 4 'Stream lifecycle'),
         verifies each one, and yields the approved/corrected/decline text
         instead of the original wherever it was CONTRADICTED, CONFLICT, or
         UNVERIFIABLE."""

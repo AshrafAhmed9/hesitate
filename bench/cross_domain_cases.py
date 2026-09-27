@@ -1,9 +1,9 @@
 """
-W7 cross-domain generalization test (PLAN.md section 9/14). Same schema,
+W7 cross-domain generalization test (the design spec section 9/14). Same schema,
 same resolve.py, same extract.py as the clinic domain -- zero code
 changes -- run against corpus/cross_domain/insurance_records.py.
 
-FINDING (published per PLAN.md section 5's "publish mistakes" norm): the
+FINDING (published per the design spec section 5's "publish mistakes" norm): the
 gate does NOT generalize cleanly to this domain out of the box. The
 clinic fixtures work because most of their attributes are unconditional
 (conditions=()), so extract.py's known gap -- it never resolves

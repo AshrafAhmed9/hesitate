@@ -1,6 +1,6 @@
 """
 Runs the Tier 2 semantic-route benchmark and publishes its own confusion
-matrix and latency, separate from the typed-route benchmark (PLAN.md
+matrix and latency, separate from the typed-route benchmark (the original design spec
 section 10). Usage: source .venv/bin/activate && python -m bench.run_semantic_benchmark
 """
 import sys
@@ -33,7 +33,7 @@ def main() -> int:
     print(f"Score: {correct}/{n}")
     print(f"Semantic route latency (warm, single passage): p50={timings[n//2]:.2f}ms p95={timings[min(n-1, int(n*0.95))]:.2f}ms")
     print("STATUS: starter calibration set (4 cases). Not the independently-labeled")
-    print("calibration split PLAN.md section 10 requires before thresholds are 'tuned'.")
+    print("calibration split the design spec section 10 requires before thresholds are 'tuned'.")
     return 0 if correct == n else 1
 
 

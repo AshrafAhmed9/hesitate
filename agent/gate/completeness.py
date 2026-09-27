@@ -1,5 +1,5 @@
 """
-W3 completeness check — PLAN.md section 10: "Record unclassified spans
+W3 completeness check — the design spec section 10: "Record unclassified spans
 explicitly. Full character coverage alone is insufficient: check whether
 all propositions and qualifications were represented." Section 4: "Only
 an audited allowlist of fixed conversational phrases is exempt.
@@ -11,7 +11,7 @@ concrete, real gap found live (2026-09-13): a sentence like "fast for
 8-12 hours" or "you'll get a text confirmation" contains a factual claim
 that no typed pattern in extract.py recognizes, and previously silently
 defaulted to SUPPORTED (schema.py: "no claims to check") -- exactly the
-failure mode PLAN.md section 5 calls out ("unknown claims silently
+failure mode the design spec section 5 calls out ("unknown claims silently
 classified nonfactual count as failures").
 
 Scope: flags number+unit patterns (durations, money, percentages) that

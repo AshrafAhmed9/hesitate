@@ -6,7 +6,7 @@ the real Moss Cloud service.
 
 WHY THIS EXISTS: `agent/gate/resolve.py` deliberately takes a
 `list[PolicyRecord]` directly so it's testable without any live
-connection. But PLAN.md's mandatory deliverable is a *deployed* agent
+connection. But the original design spec's mandatory deliverable is a *deployed* agent
 using Moss for retrieval (section 23), and that adapter code — "take a
 caller's spoken question, retrieve candidate policy passages, map them
 back to curated PolicyRecords by source_id" — did not exist and could not

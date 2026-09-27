@@ -1,7 +1,7 @@
 """
 W3 — deterministic corrections and the decline template.
 
-PLAN.md section 4: "Correct contradictions using audited deterministic
+the design spec section 4: "Correct contradictions using audited deterministic
 templates populated solely from validated records. No unchecked
 LLM-generated correction... If a complete replacement cannot be
 established, decline." Section 10 adds a bounded one-shot semantic
@@ -26,7 +26,7 @@ _TEMPLATES = {
 def build_correction(verdict: AtomicVerdict) -> str | None:
     """Returns a reviewed-template correction string for one CONTRADICTED
     atomic verdict, populated solely from the resolved PolicyRecord's own
-    values (never from the model's original wrong text) — per PLAN.md
+    values (never from the model's original wrong text) — per the original design spec
     section 4. Returns None if no template exists for this attribute or no
     record was resolved, in which case the caller must decline."""
     if verdict.decision != Decision.CONTRADICTED or verdict.resolved_record is None:

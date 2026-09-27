@@ -1,5 +1,5 @@
 """
-W7 cross-domain generalization pack — PLAN.md section 9: "Fictional
+W7 cross-domain generalization pack — the design spec section 9: "Fictional
 insurance servicing policy pack using the same core and explicit
 adaptation contract... Run coverage limits, deadlines, required
 documents, exceptions, and ambiguous applicability cases."

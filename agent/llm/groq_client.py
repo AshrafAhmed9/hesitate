@@ -7,13 +7,13 @@ MEASURED FINDING, not asserted: gpt-oss-20b is a reasoning model that by
 default spends completion tokens on a hidden `reasoning` field before
 producing `content`. For a one-sentence factual reply this measured
 121 reasoning tokens and 581ms total latency -- both directly hostile to
-the voice-turn latency budget (PLAN.md section 5 target: added
+the voice-turn latency budget (the design spec section 5 target: added
 first-useful-answer p95 <= 200ms). Setting `reasoning_effort: "low"`
 dropped reasoning tokens to 6 and total latency to 361ms on the same
 question, measured on the same machine/network. `reasoning_effort: "none"`
 is NOT a valid value for this model (HTTP 400) -- "low" is the floor.
 
-This is exactly the kind of measured-not-invented latency finding PLAN.md
+This is exactly the kind of measured-not-invented latency finding the original design spec
 section 5 requires ("no fixed '15ms NLI' claim without measurement").
 """
 from __future__ import annotations
@@ -30,7 +30,7 @@ REASONING_EFFORT = "low"  # measured minimum; "none" is rejected by the API
 def generate_reply(system_prompt: str, user_text: str, max_tokens: int = 150) -> dict:
     """Returns {'text': str, 'latency_ms': float, 'reasoning_tokens': int,
     'completion_tokens': int}. Raises on non-200 rather than silently
-    returning an empty reply -- PLAN.md's own gpt-oss discovery here was
+    returning an empty reply -- the original design spec's own gpt-oss discovery here was
     exactly a silent-empty-content failure mode to guard against."""
     import time
     api_key = os.environ["GROQ_API_KEY"]

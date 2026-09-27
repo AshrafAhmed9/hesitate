@@ -1,7 +1,7 @@
 """
 The adapter between a Moss-shaped retrieval client and the gate.
 
-PLAN.md section 4: "Moss retrieves candidates from natural-language
+the design spec section 4: "Moss retrieves candidates from natural-language
 questions/claims; resolve each candidate's key against the complete
 applicable set." This module is that step: given retrieved passages
 (doc_id, text, score), map each back to its curated PolicyRecord(s) by

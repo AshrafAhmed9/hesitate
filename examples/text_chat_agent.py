@@ -1,5 +1,5 @@
 """
-PLAN.md section 9: "Reusable integration | Versioned gate interface,
+the design spec section 9: "Reusable integration | Versioned gate interface,
 packaged example, a second compatible text-stream agent | Another worker
 invokes the same core without copying clinic logic."
 

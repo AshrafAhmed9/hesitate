@@ -2,7 +2,7 @@
 Typed extraction: sentence text -> Claim (schema.py), and curated document
 text -> PolicyRecord candidates for retrieval fixtures.
 
-Per PLAN.md section 10 ("Typed modules"): numeric+units, monetary amounts,
+Per the design spec section 10 ("Typed modules"): numeric+units, monetary amounts,
 categorical coverage, required-document sets, and site/service identity.
 Regex-only, no model call — this is the fast typed path (target ~5ms),
 distinct from the not-yet-built semantic/NLI route (section 10).

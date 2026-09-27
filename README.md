@@ -102,9 +102,8 @@ corpus/         synthetic clinic policy documents, including a deliberately stal
 bench/          benchmark scripts with pre-declared expected answers — every number in the docs traces back here
 tests/          the pytest suite
 web_api/        the deployed FastAPI service and the browser call page
-docs/           architecture diagram, PRD, the demo video script
-COMPETITION.md  the honest running log — what's proven, what's not, what broke and how it got fixed
-PLAN.md         the full spec this repo builds toward
+docs/           architecture, PRD, failure taxonomy
+COMPETITION.md  build log: what broke during the build and how each problem was found and fixed
 ```
 
 ## One hard rule

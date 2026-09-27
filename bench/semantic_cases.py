@@ -1,7 +1,7 @@
 """
 Pre-declared calibration/test cases for the Tier 2 semantic route
 (agent/gate/semantic.py). Separate from bench/cases.py (typed route) per
-PLAN.md section 10: "a fast typed path cannot hide a slow semantic path
+the design spec section 10: "a fast typed path cannot hide a slow semantic path
 in an overall average" -- evaluate them separately.
 
 STATUS: small starter set for calibration sanity-checking, not the

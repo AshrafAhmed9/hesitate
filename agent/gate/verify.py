@@ -1,7 +1,7 @@
 """
 The verification gate's per-sentence entry point.
 
-PLAN.md section 4: "Release the original sentence only if every atomic
+the design spec section 4: "Release the original sentence only if every atomic
 claim is supported." This module extracts typed claims (extract.py),
 resolves each against the candidate PolicyRecords Moss returned
 (resolve.py), and produces a GateDecision (schema.py) whose

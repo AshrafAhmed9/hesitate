@@ -20,7 +20,7 @@ def test_semantic_case(claim_text, passages, expected):
 
 
 def test_semantic_route_latency_measured_not_asserted():
-    """No fixed '15ms NLI' claim without measurement (PLAN.md section 10).
+    """No fixed '15ms NLI' claim without measurement (the design spec section 10).
     This asserts a generous ceiling to catch regressions, not a tight bound.
 
     OBSERVED FLAKE (2026-09-13): failed once under heavy concurrent load

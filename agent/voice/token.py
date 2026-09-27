@@ -1,7 +1,7 @@
 """
 LiveKit room-token issuance for the browser client.
 
-PLAN.md section 3: "Keep credentials server-side; issue short-lived
+the design spec section 3: "Keep credentials server-side; issue short-lived
 room-scoped tokens." This is that boundary -- the API secret never
 leaves the server process; only a signed, room-scoped, time-limited JWT
 is handed to the browser.

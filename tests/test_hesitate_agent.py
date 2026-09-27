@@ -70,7 +70,7 @@ async def test_correct_claim_passes_through_unmodified():
 
 @pytest.mark.asyncio
 async def test_final_flush_with_no_trailing_punctuation():
-    """PLAN.md section 4: 'Final flush goes through the same gate.'"""
+    """the design spec section 4: 'Final flush goes through the same gate.'"""
     tokens = ["Fast for 8 hours"]  # no trailing period
     out = await _collect(tokens)
     assert out == ["Fast for 8 hours"]

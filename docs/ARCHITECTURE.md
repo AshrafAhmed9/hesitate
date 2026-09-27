@@ -1,6 +1,6 @@
 # Architecture — Hesitate
 
-Mandatory submission deliverable (PLAN.md section 23: "architecture diagram showing the retrieval flow").
+How a call flows through the system, and what each part is proven to do.
 
 ## Retrieval and verification flow
 
@@ -8,7 +8,7 @@ Mandatory submission deliverable (PLAN.md section 23: "architecture diagram show
 flowchart TD
     A[Caller mic] --> B[LiveKit room<br/>silero VAD + Deepgram STT<br/>all live-verified]
     B --> C[Groq LLM: openai/gpt-oss-20b<br/>reasoning_effort=low]
-    C --> D[Bounded sentence buffer<br/>PLAN.md sec 4 'Stream lifecycle']
+    C --> D[Bounded sentence buffer<br/>the original design spec sec 4 'Stream lifecycle']
     D --> E{Typed extraction<br/>agent/gate/extract.py}
     E -->|typed slot found| F[Moss: retrieve candidate<br/>PolicyRecords by key]
     E -->|no typed slot| G[Tier 2: local NLI<br/>agent/gate/semantic.py<br/>STATUS: standalone, not yet<br/>wired into sentence-level flow]
@@ -38,7 +38,7 @@ Updated 2026-09-13 after live account integration and a first live voice-pipelin
 | Typed extraction (6 claim families) | Implemented, tested (13/13 benchmark, 15/15 pytest) |
 | Structured PolicyRecord resolution: applicability, supersession, conflict | Implemented, tested |
 | Deterministic correction from resolved record | Implemented, tested — never uses model's original wrong value |
-| Tier 2 local NLI (cross-encoder/nli-deberta-v3-xsmall) | Implemented, benchmarked standalone (4/4 cases, warm p50 ~7ms). **Still not wired into the sentence-level gate** — needs decomposition into atomic propositions (PLAN.md section 10) |
+| Tier 2 local NLI (cross-encoder/nli-deberta-v3-xsmall) | Implemented, benchmarked standalone (4/4 cases, warm p50 ~7ms). **Still not wired into the sentence-level gate** — needs decomposition into atomic propositions (the design spec section 10) |
 | Live Moss retrieval | **Live and verified.** Real project connected; retrieval genuinely ranks a stale policy document above the current one for the natural patient question (0.99 vs 0.975 similarity, confirmed twice) — the exact scenario the product exists to catch |
 | End-to-end (real Moss + real Groq LLM + gate) | **Proven live once** (`tests/test_end_to_end_live.py`): real retrieval surfaces the stale doc, real LLM states it as fact, the gate catches and corrects it in 9.76ms |
 | `HesitateAgent` (overrides LiveKit's `tts_node`) | Implemented, unit-tested (4/4) at the text/buffering level |

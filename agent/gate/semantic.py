@@ -1,5 +1,5 @@
 """
-W3 semantic/NLI route — PLAN.md section 10, "Semantic verification".
+W3 semantic/NLI route — the design spec section 10, "Semantic verification".
 
 Handles claims that carry no typed slot (extract.py only covers the six
 numeric/categorical families). Uses a genuine local entailment model
@@ -10,7 +10,7 @@ Model choice rationale (measured, not asserted): a cross-encoder trained
 on NLI (contradiction/entailment/neutral) rather than a bi-encoder
 similarity model, because similarity cannot distinguish "the passage is
 about this topic" from "the passage supports or contradicts this claim"
--- exactly the failure mode section 6 of PLAN.md names for typed claims,
+-- exactly the failure mode section 6 of the original design spec names for typed claims,
 and it applies identically here. Size (xsmall, ~70MB) chosen for CPU
 inference latency; see measured numbers below.
 

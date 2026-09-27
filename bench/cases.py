@@ -1,5 +1,5 @@
 """
-Pre-declared contract-suite cases. PLAN.md section 5: "Start with a
+Pre-declared contract-suite cases. the design spec section 5: "Start with a
 200-case contract suite ... Lock the holdout hash before tuning."
 
 STATUS: this is a starter set (not yet the full 200-case suite with
@@ -58,7 +58,7 @@ CASES = [
     # KNOWN GAP, not a bug: this sentence makes a factual claim ("you'll
     # get a text message") that no typed pattern in extract.py recognizes,
     # so zero claims are extracted and the sentence defaults to SUPPORTED
-    # (schema.py: "no claims to check"). PLAN.md section 5 explicitly
+    # (schema.py: "no claims to check"). the design spec section 5 explicitly
     # requires this to count as a failure ("unknown claims silently
     # classified nonfactual count as failures") -- it does, here, honestly,
     # rather than being hidden. Closing this requires the completeness/
@@ -69,7 +69,7 @@ CASES = [
     # Unresolved conflict: two equally-applicable current records disagree.
     ("You'll need to fast for 8 hours.", _CONFLICTING, Decision.CONFLICT, "declined"),
 
-    # --- Depth additions (PLAN.md section 6): unit normalization, compound
+    # --- Depth additions (the design spec section 6): unit normalization, compound
     # claims, decimal precision -- not just one phrasing per attribute. ---
 
     # Unit normalization: 480 minutes == 8 hours, should match the current record.
@@ -78,11 +78,11 @@ CASES = [
     # close to the stale 12h record either -- tests that normalization
     # doesn't accidentally match on rounding).
     ("Fast for 700 minutes before the test.", RECORDS, Decision.CONTRADICTED, "corrected"),
-    # Compound claim, both correct: PLAN.md section 4 -- multiple atomic
+    # Compound claim, both correct: the design spec section 4 -- multiple atomic
     # claims in one sentence must ALL be checked, not just the first found.
     ("You will need to fast for 8 hours and it costs $150.", RECORDS, Decision.SUPPORTED, "released"),
     # Compound claim, ONE wrong: "one true number cannot approve a mixed
-    # sentence" (PLAN.md section 4) -- the correct fasting duration must
+    # sentence" (the design spec section 4) -- the correct fasting duration must
     # not mask the hallucinated cost.
     ("You will need to fast for 8 hours and it costs $200.", RECORDS, Decision.CONTRADICTED, "corrected"),
     # Compound claim, the OTHER one wrong -- order shouldn't matter.

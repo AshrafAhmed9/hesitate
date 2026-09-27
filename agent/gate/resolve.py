@@ -1,5 +1,5 @@
 """
-W3 typed resolution route — PLAN.md section 4 ("Canonical policies",
+W3 typed resolution route — the design spec section 4 ("Canonical policies",
 "Claims and decisions") and section 10 ("Typed modules").
 
 Given a Claim (extracted from the outgoing sentence) and the full set of
@@ -101,7 +101,7 @@ def _values_equal(claim: Claim, record: PolicyRecord) -> bool:
 # coverage/document/polarity claims), with explicit supersession and
 # conflict detection per section 4.
 #
-# NOT IMPLEMENTED (PLAN.md section 10, "Semantic verification"): the local
+# NOT IMPLEMENTED (the design spec section 10, "Semantic verification"): the local
 # entailment/NLI route for eligible nonnumeric claims, its calibration
 # split, and abstention thresholds. Per section 4's decision table, claims
 # that reach this stub because no typed parser covers them currently

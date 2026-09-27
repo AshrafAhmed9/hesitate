@@ -1,6 +1,6 @@
 # Failure taxonomy
 
-PLAN.md section 6 (depth work): "A failure taxonomy from real runs... Say which categories are
+the design spec section 6 (depth work): "A failure taxonomy from real runs... Say which categories are
 caught, which are not, and why." This is compiled from actual failures found during development —
 via live LLM output, live NLI model behavior, and live cross-domain testing — not invented for
 completeness. Each entry links to where it was found and its current status.
@@ -12,7 +12,7 @@ completeness. Each entry links to where it was found and its current status.
 | 3 | Wrong polarity on a categorical claim | "your plan does not cover this" when it does | **Yes** | Polarity is a first-class field in the comparison key | Closed |
 | 4 | Unresolved conflict between equally-current records | Two active records for the same key disagree, neither supersedes the other | **Yes** | Explicit `CONFLICT` decision distinct from `UNVERIFIABLE` — never picked by similarity | Closed |
 | 5 | Vague/range claim with no clean typed value | "fast for 8-12 hours" | **Yes, as of 2026-09-13** | Was silently defaulting to SUPPORTED (zero claims extracted); a completeness heuristic (`agent/gate/completeness.py`) now flags number+unit spans no typed pattern consumed | Closed same day it was found — see `bench/cases.py` regression case |
-| 6 | Factual claim with no number in it at all | "you'll get a text message confirmation" | **No** | Neither the typed route nor the completeness heuristic can detect a claim that has no number/unit signature | **Open** — needs the model-assisted decomposition PLAN.md section 10 specifies, which requires an LLM call |
+| 6 | Factual claim with no number in it at all | "you'll get a text message confirmation" | **No** | Neither the typed route nor the completeness heuristic can detect a claim that has no number/unit signature | **Open** — needs the model-assisted decomposition the design spec section 10 specifies, which requires an LLM call |
 | 7 | Off-topic passage mistaken for contradiction (Tier 2 only) | NLI model scored 89% confident CONTRADICTED between two topically unrelated sentences | **No, in isolation** | Small NLI models can be overconfident on out-of-domain pairs. Mitigated in practice because Moss retrieval should only ever return topically relevant candidates, but that mitigation is unverified end-to-end | **Open**, mitigation unverified |
 | 8 | Domain-specific vocabulary gap | "police report" not recognized as a required-document type (insurance domain) | **No** | `_extract_required_document`'s vocabulary is hardcoded from the clinic domain | **Open** — silent zero-claim result, not a crash; found via the cross-domain test |
 | 9 | Condition-dependent facts in a new domain | "deductible for collision" vs a generic "$500" claim with no condition | **No** | `extract.py` never resolves `conditions` from sentence text or caller context — always defaults to `()`. Costless in the clinic domain (mostly unconditional facts); costly in insurance (routinely conditional) | **Open** — a pre-existing, now-quantified gap |
@@ -22,5 +22,5 @@ completeness. Each entry links to where it was found and its current status.
 
 Seven of ten categories are closed, with the newest (#10) closed same-day it was found, live, while
 recording the demo video. Three remain open, each with a stated reason rather than a vague "known
-limitations" disclaimer. This is the honest answer to "what does it not catch" that PLAN.md section
+limitations" disclaimer. This is the honest answer to "what does it not catch" that the design spec section
 6 and the demo script's Segment 5 both require.

@@ -1,5 +1,5 @@
 """
-Proves the reusability claim (PLAN.md section 9): the same verification
+Proves the reusability claim (the design spec section 9): the same verification
 gate used by HesitateAgent (voice) works unmodified in a plain text
 agent, with zero clinic-specific code added here. Mocks the LLM call so
 this test doesn't spend Groq API tokens on every run.
