@@ -8,3 +8,6 @@ node_modules/
 # venv holds sentence-transformers/torch weights, not needed in git
 .venv/
 corpus/published.json
+
+# personal demo prep, kept outside the repo
+Hesitate_Finale_Guide*.md
