@@ -28,6 +28,13 @@ def build_index_docs(records: list[PolicyRecord]) -> list[dict]:
     return [{"id": sid, "text": text} for sid, text in by_source.items()]
 
 
+def build_record_docs(records: list[PolicyRecord]) -> list[dict]:
+    """One retrievable doc per policy sentence, id '<source_id>#<attribute>'.
+    build_index_docs keeps only the first sentence of each source file, which
+    left arrival/coverage/referral facts unsearchable in the live call."""
+    return [{"id": f"{r.source_id}#{r.attribute}", "text": r.source_span} for r in records]
+
+
 def retrieve_candidate_records(
     client,
     index_name: str,
@@ -40,5 +47,5 @@ def retrieve_candidate_records(
     attribute per document). This is the actual candidate set resolve.py
     receives -- retrieval picks *documents*, resolution picks *facts*."""
     hits = client.query(index_name, query_text, top_k=top_k)
-    hit_source_ids = {h.doc_id for h in hits}
+    hit_source_ids = {h.doc_id.split("#")[0] for h in hits}
     return [r for r in all_records if r.source_id in hit_source_ids]

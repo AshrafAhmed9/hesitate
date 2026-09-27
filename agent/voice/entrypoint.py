@@ -73,7 +73,7 @@ SYSTEM_PROMPT = (
     "will check with the front desk."
 )
 
-MOSS_INDEX = "hesitate-test"
+MOSS_INDEX = "hesitate-clinic"
 
 
 def build_session() -> AgentSession:

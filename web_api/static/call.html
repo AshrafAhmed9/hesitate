@@ -176,6 +176,11 @@
     line-height: 1.5;
   }
   audio { display: none; }
+  .proof { margin-top:20px; border:1px solid var(--border); border-radius:10px; padding:14px 16px; background:var(--surface); }
+  .proof h2 { margin:0 0 8px; font-size:0.72rem; letter-spacing:0.06em; text-transform:uppercase; color:var(--text-dim); }
+  .proof .big { font-size:1.15rem; font-weight:650; line-height:1.4; }
+  .proof .bad { color: var(--danger); } .proof .good { color: var(--accent); }
+  .proof .fine { color:var(--text-dim); font-size:0.8rem; margin-top:6px; line-height:1.5; }
   main { max-width: 760px; }
   .toggle { display:flex; align-items:center; gap:8px; margin:0 0 16px; font-size:0.9rem; }
   .toggle input { width:18px; height:18px; accent-color: var(--accent); }
@@ -235,6 +240,8 @@
     <div id="log" aria-live="polite"></div>
   </div>
 
+  <section class="proof" id="proof" hidden aria-label="Measured results"></section>
+
   <p class="note">
     Uses your microphone over a real LiveKit connection. No audio is stored by this page.
   </p>
@@ -278,6 +285,17 @@
     logToggle.setAttribute('aria-expanded', String(logVisible));
     logToggle.textContent = logVisible ? 'Hide technical log' : 'Show technical log';
   });
+
+  fetch('/proof').then((r) => (r.ok ? r.json() : null)).then((d) => {
+    if (!d) return;
+    const m = d.summary;
+    const el = document.getElementById('proof');
+    el.innerHTML = `<h2>Measured on real calls: ${m.questions} questions, real Moss, real LLM</h2>
+      <div class="big">Wrong answers that reached the caller: <span class="bad">${m.wrong_reached_caller_without_gate} without Hesitate</span> → <span class="good">${m.wrong_reached_caller_with_gate} with it</span></div>
+      <div class="fine">Correct answers wrongly blocked: ${m.correct_answers_wrongly_blocked} of ${m.questions}. Moss lookup median ${m.moss_ms_p50} ms; the check itself median ${m.gate_ms_p50} ms (max ${m.gate_ms_max} ms).
+      Expected answers were written down before the run; re-run it with <code>python -m bench.run_live_ab</code>. Six of the questions ask about fasting, where the index holds an outdated sheet on purpose.</div>`;
+    el.hidden = false;
+  }).catch(() => {});
 
   const protect = document.getElementById('protect');
   const protectState = document.getElementById('protect-state');

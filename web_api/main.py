@@ -93,6 +93,17 @@ def get_token(room: Optional[str] = None):
     }
 
 
+@app.get("/proof")
+def proof():
+    """Serves the committed result of `python -m bench.run_live_ab` so the call page can show it."""
+    import json
+    path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "bench", "results", "live_ab.json")
+    if not os.path.exists(path):
+        raise HTTPException(status_code=404, detail="run python -m bench.run_live_ab first")
+    with open(path) as f:
+        return json.load(f)
+
+
 @app.get("/gate/live-demo")
 def gate_live_demo():
     """Same scenario as /gate/demo, but using the REAL live Moss service

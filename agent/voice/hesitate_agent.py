@@ -62,7 +62,7 @@ class HesitateAgent(Agent):
         *args,
         policy_records: list[PolicyRecord],
         moss_client=None,
-        index_name: str = "hesitate-test",
+        index_name: str = "hesitate-clinic",
         room=None,
         gate_enabled: bool = True,
         **kwargs,
@@ -93,7 +93,7 @@ class HesitateAgent(Agent):
             result = await self._moss.query(self._index_name, caller_text, QueryOptions(top_k=3))
             moss_ms = (time.perf_counter() - t0) * 1000
             hits = [{"id": d.id, "text": d.text, "score": round(d.score, 3)} for d in result.docs]
-            ids = {h["id"] for h in hits}
+            ids = {h["id"].split("#")[0] for h in hits}
             self._turn_candidates = [r for r in self._policy_records if r.source_id in ids]
         else:
             self._turn_candidates = None
