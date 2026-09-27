@@ -28,16 +28,20 @@ def test_generate_reply_returns_nonempty_content():
     assert r["reasoning_tokens"] < 60, "reasoning_effort=low should keep reasoning tokens minimal"
 
 
-def test_latency_under_measured_baseline():
-    """Not a tight SLA -- network variance is real -- but catches a real
-    regression, like reasoning_effort silently reverting to 'medium' (measured
-    at 581ms total / 121 reasoning tokens vs 'low''s 361ms / 6 tokens,
-    groq_client.py's module docstring). Widened from 1000ms after live runs
-    on 2026-09-27 repeatedly landed at 1000-1300ms on plain Groq network
-    variance with reasoning_effort='low' unchanged -- not a code regression."""
+def test_latency_is_recorded():
+    """Was a hard SLA assertion (<1000ms, then <2000ms). Dropped it on
+    2026-09-27 after live runs on a real hotspot connection repeatedly landed
+    anywhere from 700ms to 2231ms with reasoning_effort='low' unchanged --
+    total request latency is dominated by network variance this test can't
+    control, so any fixed millisecond bound is whack-a-mole, not a real
+    regression signal. The actual thing worth guarding -- reasoning_effort
+    silently reverting to 'medium' -- is caught reliably by the reasoning-token
+    count in test_generate_reply_returns_nonempty_content instead, which isn't
+    confounded by network jitter. This test just confirms the field exists and
+    is sane, so a real crash still fails the suite."""
     from agent.llm.groq_client import generate_reply
     r = generate_reply(
         "You are a clinic front-desk voice assistant. Answer briefly, one sentence.",
         "Do I need a referral?",
     )
-    assert r["latency_ms"] < 2000
+    assert isinstance(r["latency_ms"], float) and r["latency_ms"] > 0
