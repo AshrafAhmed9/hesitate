@@ -21,8 +21,17 @@ class _Stub:
     """Binds just the two methods under test, avoiding a full Agent()
     construction which needs a real LLM/STT/TTS wired up."""
     _policy_records = RECORDS
+    _turn_candidates = None
+    _gate_enabled = True
+    _turn_id = 0
+    _turn_started = 0.0
+    _first_sentence_sent = False
+    _room = None
     _verify_and_replace = HesitateAgent._verify_and_replace
+    _verify_and_trace = HesitateAgent._verify_and_trace
+    _verify_traced = HesitateAgent._verify_traced
     _verify_one = HesitateAgent._verify_one
+    _publish = HesitateAgent._publish
 
 
 async def _token_stream(tokens):
@@ -75,3 +84,53 @@ async def test_unverifiable_claim_declines():
     # slot, so it's currently SUPPORTED (no claims extracted), not
     # declined. Asserting actual behavior, matching the documented finding.
     assert out == ["You'll get a text confirmation an hour before your visit."]
+
+
+@pytest.mark.asyncio
+async def test_baseline_mode_passes_wrong_claim_through_unchecked():
+    class Off(_Stub):
+        _gate_enabled = False
+    out = []
+    async for sentence in Off()._verify_and_replace(_token_stream(["Fast for twelve hours."])):
+        out.append(sentence)
+    assert out == ["Fast for twelve hours."]
+
+
+@pytest.mark.asyncio
+async def test_gate_uses_only_moss_returned_candidates():
+    """The gate must resolve against the candidates Moss returned, not the
+    global list: with only the (superseded) stale record in the candidate set
+    there is no current record to compare against, so it declines instead of
+    correcting to 8 hours."""
+    stale_only = [r for r in RECORDS if r.source_id == "prep_stale.txt"]
+
+    class Turn(_Stub):
+        _turn_candidates = stale_only
+    out = []
+    async for sentence in Turn()._verify_and_replace(_token_stream(["Fast for twelve hours."])):
+        out.append(sentence)
+    assert out == ["I can't confirm that from this clinic's policy. Please check with the front desk."]
+
+
+@pytest.mark.asyncio
+async def test_trace_event_shape():
+    sent = []
+
+    class Room:
+        class local_participant:
+            @staticmethod
+            async def publish_data(payload, topic=None, reliable=True):
+                import json
+                sent.append((topic, json.loads(payload)))
+
+    class Traced(_Stub):
+        _room = Room()
+        _turn_id = 1
+    out = []
+    async for sentence in Traced()._verify_and_replace(_token_stream(["Fast for twelve hours."])):
+        out.append(sentence)
+    topic, ev = sent[0]
+    assert topic == "hesitate-trace"
+    assert ev["t"] == "sentence" and ev["decision"] == "contradicted"
+    assert ev["draft"] == "Fast for twelve hours." and ev["spoken"].startswith("Actually")
+    assert "gate_ms" in ev

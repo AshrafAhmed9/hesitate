@@ -55,6 +55,8 @@ import os
 
 from dotenv import load_dotenv
 from livekit.agents import AgentSession, JobContext, WorkerOptions, cli
+from livekit.agents.voice.room_io import RoomInputOptions
+from moss import MossClient
 from livekit.plugins import deepgram, elevenlabs, groq as groq_plugin, silero
 
 from agent.voice.guarded_tts import GuardedTTS
@@ -65,9 +67,13 @@ load_dotenv()
 
 SYSTEM_PROMPT = (
     "You are a clinic front-desk voice assistant. Answer questions about fasting "
-    "instructions, arrival time, insurance coverage, cost, and required documents. "
-    "Be brief -- one or two sentences."
+    "instructions, arrival time, insurance coverage, cost, and required documents, "
+    "using only the clinic policy passages you are given. Reply in one short plain "
+    "sentence with no markdown. If the passages do not answer the question, say you "
+    "will check with the front desk."
 )
+
+MOSS_INDEX = "hesitate-test"
 
 
 def build_session() -> AgentSession:
@@ -90,20 +96,42 @@ def build_session() -> AgentSession:
             model="openai/gpt-oss-20b",
             api_key=os.environ["GROQ_API_KEY"],
             reasoning_effort="low",
+            temperature=0,
         ),
         # Wrapped in GuardedTTS: real ElevenLabs is only called when
         # HESITATE_TTS_MODE=live is set explicitly. Default is silent
         # dev mode, so running this entrypoint against a real room never
         # accidentally spends the quota reserved for the final demo.
         tts=GuardedTTS(elevenlabs.TTS(api_key=os.environ["ELEVENLABS_API_KEY"])),
+        # The agent's own speech must not be cut off by echo from the room's speakers.
+        allow_interruptions=False,
     )
 
 
 async def entrypoint(ctx: JobContext):
     await ctx.connect()
     session = build_session()
-    agent = HesitateAgent(instructions=SYSTEM_PROMPT, policy_records=RECORDS)
-    await session.start(agent=agent, room=ctx.room)
+    moss = MossClient(os.environ["MOSS_PROJECT_ID"], os.environ["MOSS_PROJECT_KEY"])
+    await moss.load_index(MOSS_INDEX)
+    # Rooms named baseline-* run the same retrieval and prompt with the gate off.
+    gate_enabled = not ctx.room.name.startswith("baseline-")
+    agent = HesitateAgent(
+        instructions=SYSTEM_PROMPT, policy_records=RECORDS, moss_client=moss,
+        index_name=MOSS_INDEX, room=ctx.room, gate_enabled=gate_enabled,
+    )
+
+    async def text_input(sess, ev):
+        # Typed questions take the same path as spoken ones: Moss first.
+        async with sess._claim_user_turn():
+            await sess.interrupt()
+            prompt = await agent.prepare_turn(ev.text)
+            sess.generate_reply(user_input=ev.text, instructions=prompt)
+
+    await session.start(
+        agent=agent, room=ctx.room,
+        room_input_options=RoomInputOptions(text_input_cb=text_input),
+    )
+    await agent._publish({"t": "ready", "gate": gate_enabled})
 
 
 if __name__ == "__main__":

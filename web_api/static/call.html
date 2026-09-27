@@ -176,6 +176,29 @@
     line-height: 1.5;
   }
   audio { display: none; }
+  main { max-width: 760px; }
+  .toggle { display:flex; align-items:center; gap:8px; margin:0 0 16px; font-size:0.9rem; }
+  .toggle input { width:18px; height:18px; accent-color: var(--accent); }
+  .toggle strong[data-on="false"] { color: var(--danger); }
+  .ask { display:flex; gap:8px; margin-top:16px; }
+  .ask input { flex:1; font:inherit; padding:10px 12px; border-radius:10px; border:1px solid var(--border); background:var(--bg); color:var(--text); }
+  .ask button { flex:none; }
+  #trace { margin-top:20px; display:flex; flex-direction:column; gap:12px; }
+  .turn { border:1px solid var(--border); border-radius:10px; padding:14px; background:var(--surface); font-size:0.9rem; line-height:1.5; }
+  .turn h3 { margin:0 0 6px; font-size:0.72rem; letter-spacing:0.06em; text-transform:uppercase; color:var(--text-dim); font-weight:600; }
+  .turn .row { margin-bottom:10px; }
+  .hit { display:flex; justify-content:space-between; gap:12px; font-family: ui-monospace, Menlo, monospace; font-size:0.8rem; color:var(--text-dim); }
+  .draft.struck { text-decoration: line-through; color: var(--danger); }
+  .spoken { color: var(--accent); font-weight:600; }
+  .badge { display:inline-block; padding:2px 8px; border-radius:999px; font-size:0.72rem; font-weight:600; border:1px solid var(--border); margin-right:6px; }
+  .badge.contradicted { color: var(--danger); border-color: var(--danger); background: var(--danger-bg); }
+  .badge.supported { color: var(--accent); border-color: var(--accent); }
+  .badge.not_checked { color: var(--text-dim); }
+  .bar { display:flex; height:8px; border-radius:4px; overflow:hidden; background:var(--border); margin-top:6px; }
+  .bar span { display:block; height:100%; }
+  .bar .m { background:#5b8def; } .bar .l { background:#d9a441; } .bar .g { background: var(--accent); min-width:2px; }
+  .legend { font-size:0.72rem; color:var(--text-dim); margin-top:4px; }
+
 </style>
 </head>
 <body>
@@ -190,12 +213,21 @@
       <span id="status-text">Not connected.</span>
     </div>
 
+    <label class="toggle"><input type="checkbox" id="protect" checked>
+      <span>Protection: <strong id="protect-state" data-on="true">ON</strong> — Hesitate checks every sentence before it is spoken</span></label>
+
     <div class="button-row">
       <button id="connect" type="button">Start call</button>
       <button id="hangup" type="button" disabled>Hang up</button>
     </div>
 
+    <form class="ask" id="ask" hidden>
+      <input id="ask-text" type="text" autocomplete="off" aria-label="Type a question" placeholder="Or type a question, e.g. How long do I need to fast?">
+      <button type="submit">Ask</button>
+    </form>
+
     <div class="error-box" id="error-box" role="alert"></div>
+    <div id="trace" aria-live="polite"></div>
 
     <button class="log-toggle" id="log-toggle" type="button" aria-expanded="false" aria-controls="log">
       Show technical log
@@ -247,20 +279,84 @@
     logToggle.textContent = logVisible ? 'Hide technical log' : 'Show technical log';
   });
 
+  const protect = document.getElementById('protect');
+  const protectState = document.getElementById('protect-state');
+  const traceEl = document.getElementById('trace');
+  const askForm = document.getElementById('ask');
+  const askText = document.getElementById('ask-text');
+  protect.addEventListener('change', () => {
+    protectState.textContent = protect.checked ? 'ON' : 'OFF';
+    protectState.dataset.on = String(protect.checked);
+  });
+
+  const esc = (t) => String(t ?? '').replace(/[&<>"]/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+  function turnCard(id) {
+    let el = document.getElementById('turn-' + id);
+    if (!el) {
+      el = document.createElement('div');
+      el.className = 'turn';
+      el.id = 'turn-' + id;
+      traceEl.prepend(el);
+    }
+    return el;
+  }
+
+  function onTrace(ev) {
+    if (ev.t === 'ready') { askForm.hidden = false; setState('connected', 'Connected — agent is on the line.'); log('Agent ready.'); return; }
+    const el = turnCard(ev.id);
+    if (ev.t === 'turn') {
+      el.dataset.mossMs = ev.moss_ms;
+      el.innerHTML = `<div class="row"><h3>Caller asked</h3>${esc(ev.caller)}</div>
+        <div class="row"><h3>Moss found · ${ev.moss_ms} ms</h3>${ev.moss.map((h) =>
+          `<div class="hit"><span>${esc(h.id)}</span><span>${h.score}</span></div>`).join('') || 'nothing'}</div>
+        <div class="sentences"></div>`;
+    } else if (ev.t === 'sentence') {
+      const box = el.querySelector('.sentences') || el;
+      const changed = ev.draft !== ev.spoken;
+      const moss = Number(el.dataset.mossMs || 0);
+      if (ev.llm_ms != null) el.dataset.llmMs = ev.llm_ms;
+      const llm = Math.max(Number(el.dataset.llmMs || 0) - moss, 0);
+      const total = Math.max(moss + llm + ev.gate_ms, 1);
+      const w = (v) => Math.max((v / total) * 100, 0.5).toFixed(1) + '%';
+      const row = document.createElement('div');
+      row.className = 'row';
+      row.innerHTML = `<h3>AI drafted</h3><div class="draft${changed ? ' struck' : ''}">${esc(ev.draft)}</div>
+        <div><span class="badge ${esc(ev.decision)}">${esc(ev.decision.replace('_', ' '))}</span>${esc(ev.reason)}</div>
+        <h3 style="margin-top:8px">Caller heard</h3><div class="spoken">${esc(ev.spoken)}</div>
+        <div class="bar" title="Moss / LLM / gate"><span class="m" style="width:${w(moss)}"></span><span class="l" style="width:${w(llm)}"></span><span class="g" style="width:${w(ev.gate_ms)}"></span></div>
+        <div class="legend">Moss ${moss} ms · LLM ${llm.toFixed(0)} ms · check ${ev.gate_ms} ms</div>`;
+      box.appendChild(row);
+    }
+  }
+
+  askForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const q = askText.value.trim();
+    if (!q || !room) return;
+    askText.value = '';
+    log('Typed: ' + q);
+    await room.localParticipant.sendText(q, { topic: 'lk.chat' });
+  });
+
   connectBtn.addEventListener('click', async () => {
     clearError();
     connectBtn.disabled = true;
+    protect.disabled = true;
+    traceEl.innerHTML = '';
     setState('connecting', 'Connecting…');
 
     let tokenData;
     try {
-      const resp = await fetch('/token');
+      const roomParam = protect.checked ? '' : '?room=baseline-' + Math.random().toString(16).slice(2, 10);
+      const resp = await fetch('/token' + roomParam);
       if (!resp.ok) throw new Error(`Server returned ${resp.status}`);
       tokenData = await resp.json();
     } catch (e) {
       setState('error', 'Could not reach the server.');
       showError(`Failed to get a call token (${e.message}). Check your connection and try again.`);
       connectBtn.disabled = false;
+      protect.disabled = false;
       return;
     }
 
@@ -268,6 +364,11 @@
     log(`Got token for room: ${roomName}`);
 
     room = new LivekitClient.Room();
+
+    room.on(LivekitClient.RoomEvent.DataReceived, (payload, participant, kind, topic) => {
+      if (topic !== 'hesitate-trace') return;
+      try { onTrace(JSON.parse(new TextDecoder().decode(payload))); } catch (err) { log('Bad trace event: ' + err.message); }
+    });
 
     room.on(LivekitClient.RoomEvent.TrackSubscribed, (track) => {
       if (track.kind === 'audio') {
@@ -286,6 +387,8 @@
       setState('idle', 'Call ended.');
       connectBtn.disabled = false;
       hangupBtn.disabled = true;
+      protect.disabled = false;
+      askForm.hidden = true;
       log(`Disconnected (${reason ?? 'unknown reason'}).`);
     });
 
@@ -298,17 +401,16 @@
         await room.localParticipant.setMicrophoneEnabled(true);
         log('Microphone enabled.');
       } catch (micErr) {
-        setState('error', 'Microphone access denied.');
-        showError('This page needs microphone access to place a call. Allow it in your browser’s site settings, then try again.');
-        connectBtn.disabled = false;
-        return;
+        log('Microphone unavailable — type your question instead.');
       }
 
+      setTimeout(() => { if (room && room.state === 'connected') askForm.hidden = false; }, 12000);
       hangupBtn.disabled = false;
     } catch (e) {
       setState('error', 'Could not connect to the call.');
       showError(`Connection failed (${e.message}). This usually means no agent worker is currently running to answer the call — try again shortly.`);
       connectBtn.disabled = false;
+      protect.disabled = false;
       log(`Error: ${e.message}`);
     }
   });
