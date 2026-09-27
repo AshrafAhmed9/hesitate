@@ -24,11 +24,16 @@ def test_generate_reply_returns_nonempty_content():
 
 
 def test_latency_under_measured_baseline():
-    """Not a tight SLA -- network variance is real -- but catches a
-    regression back toward the ~580ms default-reasoning-effort behavior."""
+    """Not a tight SLA -- network variance is real -- but catches a real
+    regression, like reasoning_effort silently reverting to 'medium' (measured
+    at 581ms total / 121 reasoning tokens vs 'low''s 361ms / 6 tokens,
+    groq_client.py's module docstring). Widened from 1000ms after live runs
+    on 2026-09-27 repeatedly landed at 1000-1300ms on plain Groq network
+    variance with reasoning_effort='low' unchanged -- not a code regression."""
     from agent.llm.groq_client import generate_reply
     r = generate_reply(
         "You are a clinic front-desk voice assistant. Answer briefly, one sentence.",
         "Do I need a referral?",
     )
-    assert r["latency_ms"] < 1000
+    assert r["reasoning_tokens"] < 20, "reasoning_effort=low should keep reasoning tokens minimal"
+    assert r["latency_ms"] < 2000
