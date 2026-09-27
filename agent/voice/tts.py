@@ -1,7 +1,7 @@
 """
 TTS abstraction with an explicit quota guard.
 
-DECISION (Ashraf, recorded in docs/BUILD_LOG.md): the ElevenLabs free tier
+DECISION: the ElevenLabs free tier
 (10,000 chars/month) is reserved for the final demo recording and the
 live finale ONLY. Dev iteration and rehearsal must not spend it. This
 module enforces that as code, not as a habit to remember: real ElevenLabs

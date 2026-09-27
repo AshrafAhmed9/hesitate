@@ -48,4 +48,4 @@ Updated 2026-09-13 after live account integration and a first live voice-pipelin
 | Dashboard / call UI beyond the bare test page | Not built |
 
 This document is regenerated as pieces close; it is not written aspirationally ahead of the code. See
-`docs/BUILD_LOG.md` for the full evidence ledger with dates and sources.
+`docs/FAILURE_TAXONOMY.md` for known gaps and `bench/results/` for measured results.

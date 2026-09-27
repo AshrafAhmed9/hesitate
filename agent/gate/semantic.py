@@ -23,7 +23,7 @@ STATUS: calibration thresholds below are a reasoned starting point (see
 comments), NOT yet tuned against a locked calibration split per section
 10's requirement ("Use development data for extraction design, a separate
 calibration split for thresholds, and locked test data for claims").
-That calibration work is tracked in docs/BUILD_LOG.md, not hidden.
+That calibration work is still open.
 """
 from __future__ import annotations
 

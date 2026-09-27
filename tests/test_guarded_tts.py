@@ -1,5 +1,5 @@
 """
-Locks in the live-call quota guard (docs/BUILD_LOG.md decision: ElevenLabs
+Locks in the live-call quota guard (decision: ElevenLabs
 free tier reserved for final demo + finale only). Uses a dummy API key to
 prove the real provider is genuinely never called in dev mode -- if it
 were called, this would raise (invalid key), not silently succeed.

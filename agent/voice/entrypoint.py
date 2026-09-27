@@ -3,8 +3,8 @@ The actual LiveKit Agents worker entrypoint. Wires HesitateAgent
 (agent/voice/hesitate_agent.py) to real Deepgram STT, real Groq LLM
 (model + reasoning_effort matching the measured finding in
 agent/llm/groq_client.py), and TTS gated by agent/voice/tts.py's dev/live
-mode split (real ElevenLabs only when explicitly requested, since Ashraf
-reserved that quota for the final demo).
+mode split (real ElevenLabs only when explicitly requested, since the free
+quota is reserved for the live demo).
 
 STATUS (updated after a real live test, 2026-09-13): constructs without
 error. Confirmed LIVE and working: connects to a real LiveKit room via
@@ -89,7 +89,7 @@ def build_session(vad=None) -> AgentSession:
     mode) lives in agent/voice/tts.py and is NOT yet wired into this
     AgentSession path -- the LiveKit plugin calls ElevenLabs directly. Using
     this entrypoint against a real room WILL spend the reserved ElevenLabs
-    quota; that wiring gap is tracked in docs/BUILD_LOG.md, not hidden."""
+    quota; that wiring gap is a known limitation."""
     return AgentSession(
         stt=deepgram.STT(model="nova-3", api_key=os.environ["DEEPGRAM_API_KEY"]),
         # REAL FINDING: without VAD, AgentSession never detected the end of
@@ -187,11 +187,11 @@ if __name__ == "__main__":
     # picks an OS-assigned port for 0, it does not disable the server,
     # and the crash-loop persisted anyway. The honest read is that
     # deepgram+elevenlabs+groq+silero's combined footprint exceeds what
-    # Render's free plan allows for more than about a minute. Per
-    # Ashraf's decision, this worker is NOT deployed on Render for the
+    # Render's free plan allows for more than about a minute. So
+    # this worker is NOT deployed on Render for the
     # free tier -- it is run from a local machine (`python -m
     # agent.voice.entrypoint start`) for demos and the live finale,
-    # documented as an accepted limitation in docs/BUILD_LOG.md rather than
+    # documented as an accepted limitation (README) rather than
     # papered over. The deployed web service (call.html, /token,
     # /gate/*) stays on Render regardless.
     cli.run_app(WorkerOptions(entrypoint_fnc=entrypoint, prewarm_fnc=prewarm, load_threshold=1.5))

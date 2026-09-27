@@ -59,7 +59,7 @@ but no approved record backs it, so the caller still hears the real policy.
 - Moss, LiveKit, Deepgram, Groq and ElevenLabs are all real accounts, not mocks.
 - The whole loop has been run live with a real microphone.
 - The voice worker runs from a local machine, not on Render. It crash-looped on the free tier on
-  every attempt; the write-up is in `docs/BUILD_LOG.md`.
+  every attempt; details are in `agent/voice/entrypoint.py`.
 - Not covered: claims with no number in them ("you'll get a text"), and vocabulary from outside the
   clinic domain. Both are listed with their causes in `docs/FAILURE_TAXONOMY.md`.
 
@@ -103,7 +103,6 @@ bench/          benchmark scripts with pre-declared expected answers — every n
 tests/          the pytest suite
 web_api/        the deployed FastAPI service and the browser call page
 docs/           architecture, PRD, failure taxonomy
-docs/BUILD_LOG.md  build log: what broke during the build and how each problem was found and fixed
 ```
 
 ## One hard rule

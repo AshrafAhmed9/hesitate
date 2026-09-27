@@ -1,4 +1,4 @@
-"""Locks in the ElevenLabs quota guard (docs/BUILD_LOG.md decision: reserved
+"""Locks in the ElevenLabs quota guard (decision: reserved
 for final demo + finale only)."""
 import sys
 from pathlib import Path

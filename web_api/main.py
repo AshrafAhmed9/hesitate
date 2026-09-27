@@ -26,8 +26,8 @@ app = FastAPI(title="Hesitate")
 # dedicated free-tier service -- and crash-looped every time (~45-90s
 # restart cycle); the plugin stack (deepgram+elevenlabs+groq+silero)
 # simply doesn't fit free-tier RAM for more than about a minute. See
-# agent/voice/entrypoint.py's docstring for the full finding. Per
-# Ashraf's decision, the worker runs from a local machine for demos and
+# agent/voice/entrypoint.py's docstring for the full finding. So
+# the worker runs from a local machine for demos and
 # the live finale instead of a paid Render plan; this deployed service
 # still serves call.html, issues tokens, and demonstrates the
 # verification gate against live Moss (/gate/live-demo) on its own.

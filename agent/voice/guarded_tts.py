@@ -4,7 +4,7 @@ quota discipline as agent/voice/tts.py, but at the AgentSession level so
 it's actually enforced during a live call, not just in isolated dev-mode
 testing.
 
-DECISION (Ashraf, docs/BUILD_LOG.md): the ElevenLabs free tier (10,000
+DECISION: the ElevenLabs free tier (10,000
 chars/month) is reserved for the final demo recording and the live
 finale ONLY. Without this wrapper, running agent/voice/entrypoint.py
 against ANY real LiveKit room -- including exploratory dev testing --
